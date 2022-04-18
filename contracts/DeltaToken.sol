@@ -12,11 +12,11 @@ contract DeltaToken is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pau
     bytes32 public constant MINTER_ROLE = keccak256("minterRole");
     bytes32 public constant PAUSER_ROLE = keccak256("pauserRole");
 
-    // uint256 public constant INITIAL_SUPPLY = 1000000000;
+    uint256 public constant INITIAL_SUPPLY = 1000000000;
 
 
     constructor(uint256 initialSupply) ERC20("Delta", "DLT") {  
-        //_mint(msg.sender, initialSupply);
+        _mint(_msgSender(), initialSupply);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         _setupRole(MINTER_ROLE, _msgSender());

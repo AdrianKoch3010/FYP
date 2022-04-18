@@ -10,4 +10,6 @@ networks:
   default: development
   rinkeby:
     verify: True
+  kovan:
+    verify: True
 dotenv: .env
