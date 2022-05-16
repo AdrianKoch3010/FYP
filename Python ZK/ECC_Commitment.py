@@ -8,7 +8,7 @@ p = 2**256 - 2**224 + 2**192 + 2**96 - 1
 print("p:", p)
 
 
-m = 0
+m = 1
 r = random.randint(1, p-1)
 #m = int.from_bytes(SHA256.new(message).digest(), byteorder='big')
 #r = int.from_bytes(SHA256.new(blinding_factor).digest(), byteorder='big')
@@ -41,7 +41,7 @@ print('zb:', zb)
 
 # Verify the proof
 check1 = x * C + Ca == f * G + za * H
-check2 = ((x-f) % p) * C + Cb == (zb % p) * H
+check2 = -(x-f) * -C + Cb == -zb * -H
 
 print('check1:', check1)
 print('check2:', check2)

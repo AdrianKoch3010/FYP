@@ -7,7 +7,7 @@ p = 2**256 - 2**224 + 2**192 + 2**96 - 1
 security_parameter = 256
 print("p:", p)
 
-generate_new = True
+generate_new = False
 
 m = 1
 r = random.randint(1, p-1) if generate_new else 13135494537388068198112774104946649304594907867229462356834959420705414138495
