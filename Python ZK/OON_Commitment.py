@@ -2,24 +2,31 @@ from Crypto.Random import random
 from CryptoHelper import *
 import math
 
+#TODO: check if the random number is in the right range
+# It might have to be in the range [2, p-2]
+
 security_parameter = 256
 print("p:", p)
+print('security_parameter:', security_parameter)
 
 generate_new = True
 
 # Create a list of commitments, one of which is a commitment to 0
 commitments = []
-l = 0
+l = 4
 n = 3
 N = 2**n
 assert l < N, "l must be less than N"
 assert N == 2**math.ceil(math.log(N, 2)), "N must be a power of 2"
 
 for i in range(N):
-    m = random.randint(1, p-1) if generate_new else i
-    r = random.randint(1, p-1) if generate_new else i
+    if i == l:
+        m = 0
+    else:
+        m = random.randint(1, p-1) if generate_new else (i + 234) * 5672
+    r = random.randint(1, p-1) if generate_new else (i + 9876) * 987654321
     commitments.append(Commit(m, r))
-commitments[l] = Commit(0, random.randint(1, p-1) if generate_new else 223)
+#commitments[l] = Commit(0, random.randint(1, p-1) if generate_new else 223)
 
 
 R = []
@@ -44,21 +51,22 @@ for j in range(n):
     T.append(t)
     P.append(_p)
 
-
-    Cl.append(Commit(l >> j & 1, r)) # Commit to the jth bit of l
+    l_j = l >> j & 1
+    print('l_{j}:'.format(j = j), l_j)
+    Cl.append(Commit(l_j, r)) # Commit to the jth bit of l
     Ca.append(Commit(a, s))
-    Cb.append(Commit(a*(l >> j & 1), t))
+    Cb.append(Commit(l_j*a, t))
 
 
 # The coefficients depend on the values of A
-coeffs = [calc_coeffs(n, i, l, A) for i in range(N)]
+# coeffs = [calc_coeffs(n, i, l, A) for i in range(N)]
 
-for j in range(n):
-    # Calculate Cd value
-    product = 1
-    for i in range(n):
-        product *= pow(commitments[i], coeffs[i][j], p) * Commit(0, P[j])
-    Cd.append(product)
+# for j in range(n):
+#     # Calculate Cd value
+#     product = 1
+#     for i in range(n):
+#         product *= pow(commitments[i], coeffs[i][j], p) * Commit(0, P[j])
+#     Cd.append(product)
 
 
 # Generate x
@@ -70,15 +78,16 @@ F = []
 Za = []
 Zb = []
 for j in range(n):
-    f = (l << j & 1) * x + A[j]
+    l_j = l >> j & 1
+    f = l_j * x + A[j]
     za = R[j] * x + S[j]
     zb = R[j] * (x-f) + T[j]
     F.append(f)
     Za.append(za)
     Zb.append(zb)
 
-r = R[0]
-zd = r * pow(x, n, p) - sum([P[k] * pow(x, k, p) for k in range(n)])
+# r = R[0]
+# zd = r * pow(x, n, p) - sum([P[k] * pow(x, k, p) for k in range(n)])
 
 #Vefify the proof
 print('Verifying...')
