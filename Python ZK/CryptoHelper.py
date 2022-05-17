@@ -3,10 +3,11 @@ p = 2**256 - 2**224 + 2**192 + 2**96 - 1
 g = 3007057779649931580237598654612510797095951971612630025891176454468165002055
 h = 20354936247998155748817459761265066334754915076915271771709029462851510023744
 
+
 def Commit(m, r):
     return pow(g, m, p) * pow(h, r, p) % p
 
-
+#TODO: Write unit tetsts for calc_coeffs
 def calc_coeffs(n, i, l, A):
     coeffs = [0] * n
     coeffs[0] = 1
@@ -42,3 +43,5 @@ def calc_coeffs(n, i, l, A):
                         new_coeffs[k] = coeffs[k-1] + new_coeffs[k]
                 coeffs = new_coeffs
     return coeffs
+
+# print([calc_coeffs(3, i, 0b101, [3, 2, 5]) for i in range(8)])
