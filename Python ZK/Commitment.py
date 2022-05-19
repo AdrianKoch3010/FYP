@@ -25,9 +25,9 @@ print('s:', s)
 print('t:', t)
 
 
-C = Commit(m, r)
-Ca = Commit(a, s)
-Cb = Commit(a*m, t)
+C = commit(m, r)
+Ca = commit(a, s)
+Cb = commit(a*m, t)
 
 # Generate x
 x = random.getrandbits(security_parameter) if generate_new else 310010182257446143905433863762199680188
@@ -42,9 +42,9 @@ print('zb:', zb)
 
 # Verify the proof
 left = pow(C, x, p) * Ca % p
-right = Commit(f, za)
+right = commit(f, za)
 check1 = left == right
-check2 = pow(C, x-f, p) * Cb % p == Commit(0, zb)
+check2 = pow(C, x-f, p) * Cb % p == commit(0, zb)
 
 print('check1:', check1)
 print('check2:', check2)

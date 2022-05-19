@@ -1,21 +1,35 @@
 
+from Crypto.PublicKey import ECC
+
 p = 2**256 - 2**224 + 2**192 + 2**96 - 1
 g = 3007057779649931580237598654612510797095951971612630025891176454468165002055
 h = 20354936247998155748817459761265066334754915076915271771709029462851510023744
 
+G = ECC.generate(curve='P-256').pointQ
+H = ECC.generate(curve='P-256').pointQ
 
-def Commit(m, r):
+def commit(m:int, r: int) -> int:
     return pow(g, m, p) * pow(h, r, p) % p
 
+def ECC_commit(m:int, r: int) -> ECC.EccPoint:
+    return ECC_mul(m, G) + ECC_mul(r, H)
+
+def ECC_mul(k: int, point: ECC.EccPoint) -> ECC.EccPoint:
+    if k < 0:
+        return -k * -point
+    else:
+        return k * point
+
 #TODO: Write unit tetsts for calc_coeffs
+# Calculate the coefficients p_{i,k} for the product of f_{j, i_j} for j from 0 to n-1
 def calc_coeffs(n, i, l, A):
     coeffs = [0] * n
     coeffs[0] = 1
     for j in range(n):
-        # i[j] == 1 && l[j] == 1 => x + aj
-        # i[j] == 1 && l[j] == 0 => aj
-        # i[j] == 0 && l[j] == 1 => -aj
-        # i[j] == 0 && l[j] == 0 => x - aj
+        # i_j == 1 && l_j == 1 => x + a_j
+        # i_j == 1 && l_j == 0 => a_j
+        # i_j == 0 && l_j == 1 => -a_j
+        # i_j == 0 && l_j == 0 => x - a_j
         if i >> j & 1 == 1:
             if l >> j & 1 == 1:
                 # x + aj

@@ -27,7 +27,7 @@ for i in range(N):
         m = random.randint(1, p-1) if generate_new else (i + 234) * 5672
     r = random.randint(1, p-1) if generate_new else (i + 9876) * 987654321
     r_0_commitment = r if i == l else r_0_commitment
-    commitments.append(commit(m, r))
+    commitments.append(ECC_commit(m, r))
 
 
 R = []
@@ -54,9 +54,9 @@ for j in range(n):
 
     l_j = l >> j & 1
     print('l_{j}:'.format(j = j), l_j)
-    Cl.append(commit(l_j, r)) # commit to the jth bit of l
-    Ca.append(commit(a, s))
-    Cb.append(commit(l_j*a, t))
+    Cl.append(ECC_commit(l_j, r)) # commit to the jth bit of l
+    Ca.append(ECC_commit(a, s))
+    Cb.append(ECC_commit(l_j*a, t))
 
 
 # The coefficients depend on the values of A
@@ -64,10 +64,14 @@ coeffs = [calc_coeffs(n, i, l, A) for i in range(N)]
 
 for j in range(n):
     # Calculate Cd value
-    product = 1
+    # product = 1
+    # for i in range(N):
+    #     product *= pow(commitments[i], coeffs[i][j], p) % p
+    # cd = product * commit(0, P[j]) % p
+    cd = G.point_at_infinity()
     for i in range(N):
-        product *= pow(commitments[i], coeffs[i][j], p) % p
-    cd = product * commit(0, P[j]) % p
+        cd += ECC_mul(coeffs[i][j], commitments[i])
+    cd += ECC_commit(0, P[j])
     Cd.append(cd)
 
 
@@ -96,17 +100,19 @@ print('Verifying...')
 
 print('Checking commitments to l')
 for j in range(n):
-    left = pow(Cl[j], x, p) * Ca[j] % p
-    right = commit(F[j], Za[j])
+    # left = pow(Cl[j], x, p) * Ca[j] % p
+    left = ECC_mul(x, Cl[j]) + Ca[j]
+    right = ECC_commit(F[j], Za[j])
     print('Check 0.{j}: {true}'.format(j=j, true=left == right))
 
 for j in range(n):
-    left = pow(Cl[j], x-F[j], p) * Cb[j] % p
-    right = commit(0, Zb[j])
+    # left = pow(Cl[j], x-F[j], p) * Cb[j] % p
+    left = ECC_mul(x-F[j], Cl[j]) + Cb[j]
+    right = ECC_commit(0, Zb[j])
     print('Check 1.{j}: {true}'.format(j=j, true=left == right))
 
 print('Checking commitment to 0')
-outer_product = 1
+outer_sum = G.point_at_infinity()
 for i in range(N):
     # Calculate the product of f_j,i_j
     product = 1
@@ -116,15 +122,14 @@ for i in range(N):
             product *= F[j]
         else:
             product *= x - F[j]
-    outer_product *= pow(commitments[i], product, p) % p
-left_product = outer_product
+    outer_sum += ECC_mul(product, commitments[i])
+left_sum = outer_sum
 
-# Calculate the product of the other commitments
-product = 1
+# Calculate the sum of the other commitments
+right_sum = G.point_at_infinity()
 for k in range(n):
-    product *= pow(Cd[k], -pow(x, k), p) % p
-right_product = product
+    right_sum += ECC_mul(-pow(x, k), Cd[k])
 
-left = left_product * right_product % p
-right = commit(0, zd)
+left = left_sum + right_sum
+right = ECC_commit(0, zd)
 print('Check 2: {true}'.format(true=left == right))
