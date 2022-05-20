@@ -139,8 +139,6 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> (bool, str):
     n = math.ceil(math.log(N, 2))
     assert N == 2**n, "N must be a power of 2"
 
-    print(type(proof.commitment))
-
     # Compute the challenge
     challenge = hash_all('Adrian', S, commitments, proof.commitment)
 
@@ -196,6 +194,9 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> (bool, str):
     for k in range(n):
         right_sum += ECC_mul(-pow(x, k), Cd[k])
 
+
+    print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
+
     left = left_sum + right_sum
     right = ECC_commit(0, zd)
     print('Check 3: {true}'.format(true=left == right))
@@ -215,32 +216,32 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> (bool, str):
         return False, error_string
 
 
-# main test program
-if __name__ == "__main__":
-    generate_new = True
+# # main test program
+# if __name__ == "__main__":
+#     generate_new = True
 
-    # Create a list of commitments, one of which is a commitment to 0
-    commitments = []
-    l = 5
-    n = 3
-    N = 2**n
-    r_0_commitment = 0
-    assert l < N, "l must be less than N"
-    assert N == 2**math.ceil(math.log(N, 2)), "N must be a power of 2"
+#     # Create a list of commitments, one of which is a commitment to 0
+#     commitments = []
+#     l = 5
+#     n = 3
+#     N = 2**n
+#     r_0_commitment = 0
+#     assert l < N, "l must be less than N"
+#     assert N == 2**math.ceil(math.log(N, 2)), "N must be a power of 2"
 
-    for i in range(N):
-        if i == l:
-            m = 0
-        else:
-            m = random.randint(2, p-2) if generate_new else (i + 234) * 5672
-        r = random.randint(2, p-2) if generate_new else (i + 9876) * 987654321
-        r_0_commitment = r if i == l else r_0_commitment
-        commitments.append(ECC_commit(m, r))
+#     for i in range(N):
+#         if i == l:
+#             m = 0
+#         else:
+#             m = random.randint(2, p-2) if generate_new else (i + 234) * 5672
+#         r = random.randint(2, p-2) if generate_new else (i + 9876) * 987654321
+#         r_0_commitment = r if i == l else r_0_commitment
+#         commitments.append(ECC_commit(m, r))
 
-    # Create a proof
-    proof = generate_proof(commitments, 45, l, r_0_commitment)
+#     # Create a proof
+#     proof = generate_proof(commitments, 45, l, r_0_commitment)
 
-    # Verify the proof
-    proof_valid, msg = verify_proof(45, commitments, proof)
-    print("The proof is valid:", proof_valid)
-    print("Message:", msg)
+#     # Verify the proof
+#     proof_valid, msg = verify_proof(45, commitments, proof)
+#     print("The proof is valid:", proof_valid)
+#     print("Message:", msg)
