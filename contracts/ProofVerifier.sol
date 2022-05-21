@@ -8,6 +8,10 @@ import "./P256.sol";
 
 contract ProofVerifier {
 
+    // Constructor
+    constructor() {
+    }
+
     struct Proof {
         ECC.Point c_a;
         ECC.Point c_b;

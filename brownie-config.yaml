@@ -14,4 +14,8 @@ networks:
     verify: True
   kovan:
     verify: True
+  development:
+    verify: False
+  ganache-local:
+    verify: False
 dotenv: .env

@@ -1,6 +1,5 @@
 from Crypto.PublicKey import ECC
 from Crypto.Random import random
-from Crypto.Hash import SHA256
 from CryptoHelper import *
 
 
@@ -51,3 +50,10 @@ check2 = ECC_mul(x-f, C) + Cb == ECC_commit(0, zb)
 
 print('check1:', check1)
 print('check2:', check2)
+
+print('C.x: ', C.x)
+# Generate the G and H points
+# G = ECC.generate(curve='P-256').pointQ
+# print(f"G: {int(G.x):x}, {int(G.y):x}")
+# H = ECC.generate(curve='P-256').pointQ
+# print(f"H: {int(H.x):x}, {int(H.y):x}")
