@@ -3,6 +3,7 @@ from HelperFunctions import *
 from Crypto.Hash import SHA256
 from Crypto.Random import random
 import math
+from typing import Tuple
 
 
 class SigmaProof:
@@ -133,7 +134,7 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     sigma_proof = SigmaProof(SigmaProof.Commitment(Cl, Ca, Cb, Cd), x, sigma_response)
     return sigma_proof
 
-def verify_proof(S: int, commitments: list, proof: SigmaProof) -> (bool, str):
+def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, str]:
 
     N = len(commitments)
     n = math.ceil(math.log(N, 2))

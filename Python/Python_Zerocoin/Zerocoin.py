@@ -2,6 +2,7 @@ from Crypto.Random import random
 from HelperFunctions import *
 from ZK_Proof import *
 import math
+from typing import Tuple
 
 
 class Coin:
@@ -31,7 +32,7 @@ class Blockchain:
         self.C.append(coin.c)
         return coin
 
-    def spend_coin(self, coin: Coin) -> (SigmaProof, int):
+    def spend_coin(self, coin: Coin) -> Tuple[SigmaProof, int]:
         # Temporary pad the list of commitments to a power of 2
         C_padded, _, _ = pad_commitments(self.C)
 
@@ -44,7 +45,7 @@ class Blockchain:
         proof = generate_proof(commitments, coin.S, coin.l, coin.r)
         return proof, coin.S
 
-    def verify_spend(self, S: int, proof: SigmaProof) -> (bool, str):
+    def verify_spend(self, S: int, proof: SigmaProof) -> Tuple[bool, str]:
         # check that this coin has not been spent
         if S in self.spend_coins:
             return False, "Coin has already been spent"

@@ -1,6 +1,7 @@
 
 from Crypto.PublicKey import ECC
 import math
+from typing import Tuple
 
 # NIST P-256 elliptic curve parameters
 # y^2 = x^3-3x+41058363725152142129326129780047268409114441015993725554835256314039467401291
@@ -33,7 +34,7 @@ def ECC_mul(k: int, point: ECC.EccPoint) -> ECC.EccPoint:
 
 
 # Pad the list of commitments if its length is not a power of 2
-def pad_commitments(C: list) -> (list, int, int):
+def pad_commitments(C: list) -> Tuple[list, int, int]:
     n = len(C)
     N = 2**math.ceil(math.log(n, 2))
     if N == n:
