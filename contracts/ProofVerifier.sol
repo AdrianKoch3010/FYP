@@ -15,18 +15,18 @@ contract ProofVerifier {
     struct Proof {
         ECC.Point c_a;
         ECC.Point c_b;
-        uint256 f;
-        uint256 z_a;
-        uint256 z_b;
+        int256 f;
+        int256 z_a;
+        int256 z_b;
     }
 
-    function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool valid) {
+    function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
         // check1 = ECC_mul(x, C) + Ca == ECC_commit(f, za)
         // check2 = ECC_mul(x-f, C) + Cb == ECC_commit(0, zb)
 
         // Compute the challenge x
         // uint256 x = proof.c_a + proof.c_b;
-        uint256 x = 42;
+        int256 x = 42;
 
         ECC.Point memory left = ECC.mul(x, commitment);
         left = ECC.add(left, proof.c_a);
@@ -38,6 +38,9 @@ contract ProofVerifier {
         right = ECC.commit(0, proof.z_b);
         bool check2 = ECC.isEqual(left, right);
 
-        return check1 && check2;
+        return (check1, check2);
+
+        // Check whether the commitment is on the curve
+        //return ECC.isOnCurve(commitment);
     }
 }
