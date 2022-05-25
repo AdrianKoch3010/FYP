@@ -20,7 +20,8 @@ contract ProofVerifier {
         int256 z_b;
     }
 
-    function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
+    //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
+    function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (ECC.Point memory, ECC.Point memory, bool, bool) {
         // check1 = ECC_mul(x, C) + Ca == ECC_commit(f, za)
         // check2 = ECC_mul(x-f, C) + Cb == ECC_commit(0, zb)
 
@@ -35,10 +36,11 @@ contract ProofVerifier {
 
         left = ECC.mul(x - proof.f, commitment);
         left = ECC.add(left, proof.c_b);
-        right = ECC.commit(0, proof.z_b);
+        //right = ECC.commit(0, proof.z_b);
+        right = ECC.mul(proof.z_b, ECC.H());
         bool check2 = ECC.isEqual(left, right);
 
-        return (check1, check2);
+        return (left, right, check1, check2);
 
         // Check whether the commitment is on the curve
         //return ECC.isOnCurve(commitment);

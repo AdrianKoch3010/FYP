@@ -119,10 +119,23 @@ library ECC
             (xInv, yInv) = EllipticCurve.ecInv(point.x, point.y, PP);
             (x, y) = EllipticCurve.ecMul(uint(-scalar), xInv, yInv, AA, PP);
         }
-        else { 
+        else if (scalar > 0) {{ 
             (x, y) = EllipticCurve.ecMul(uint(scalar), point.x, point.y, AA, PP);
         }
+        }
+        else {
+            // 0 * something = point at infinity
+            x = 0;
+            y = 0;
+        }
         return Point(x, y);
+    }
+
+    function pointAtInf() public pure returns (Point memory) {
+        // uint256 x;
+        // uint256 y;
+        // (x, y) = EllipticCurve.toAffine(0, 1, 0, PP);
+        return Point(0, 0);
     }
 
     function commit(int256 m, int256 r) public pure returns (Point memory) {

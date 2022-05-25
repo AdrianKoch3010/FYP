@@ -1,3 +1,4 @@
+from Python.Python_Zerocoin.HelperFunctions import G
 from brownie import ProofVerifier, ECC, EllipticCurve, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
@@ -31,10 +32,11 @@ def main():
     # uint256 z_b;
     
     _max = 9876545678
+    generate_new = False
 
     p = ch.p
     m = 1
-    r = random.randint(2, _max)
+    r = random.randint(2, _max) if generate_new else 1556
     #m = int.from_bytes(SHA256.new(message).digest(), byteorder='big')
     #r = int.from_bytes(SHA256.new(blinding_factor).digest(), byteorder='big')
     print('m:', m)
@@ -43,9 +45,9 @@ def main():
     #G = ECC.generate(curve='P-256').pointQ
     #H = ECC.generate(curve='P-256').pointQ
 
-    a = random.randint(2, _max)
-    s = random.randint(2, _max)
-    t = random.randint(2, _max)
+    a = random.randint(2, _max) if generate_new else 455
+    s = random.randint(2, _max) if generate_new else 567
+    t = random.randint(2, _max) if generate_new else 678
 
 
     # C = m * G + r * H
@@ -93,6 +95,15 @@ def main():
     # print('proof:', proof)
 
     # Verify the proof
-    check1, check2 = proof_verifier.verify(commitment, proof)
+    left, right, check1, check2 = proof_verifier.verify(commitment, proof)
+    print('left:', left)
+    print('right:', right)
     print('check1:', check1)
     print('check2:', check2)
+
+    left = ch.ECC_mul(x-f, C) + Cb
+    right = ch.ECC_commit(0, zb)
+    print(f'Actual left: {left.x}, {left.y}')
+    print(f'Actual right: {right.x}, {right.y}')
+    print(f'Point at infinity: {G.point_at_infinity().x}, {G.point_at_infinity().y}')
+
