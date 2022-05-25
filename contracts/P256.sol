@@ -109,17 +109,30 @@ library ECC
         return Point(x, y);
     }
 
-    function mul(uint256 scalar, Point memory point) public pure returns (Point memory) {
+    function mul(int256 scalar, Point memory point) public pure returns (Point memory) {
         uint256 x;
         uint256 y;
-        (x, y) = EllipticCurve.ecMul(scalar, point.x, point.y, AA, PP);
+        // if the scalar is negative, we have to invert the point
+        if (scalar < 0) {
+            uint256 xInv;
+            uint256 yInv;
+            (xInv, yInv) = EllipticCurve.ecInv(point.x, point.y, PP);
+            (x, y) = EllipticCurve.ecMul(uint(-scalar), xInv, yInv, AA, PP);
+        }
+        else { 
+            (x, y) = EllipticCurve.ecMul(uint(scalar), point.x, point.y, AA, PP);
+        }
         return Point(x, y);
     }
 
-    function commit(uint256 m, uint256 r) public pure returns (Point memory) {
+    function commit(int256 m, int256 r) public pure returns (Point memory) {
         Point memory left = mul(m, G());
         Point memory right = mul(r, H());
         return add(left, right);
+    }
+
+    function isOnCurve(Point memory point) public pure returns (bool) {
+        return EllipticCurve.isOnCurve(point.x, point.y, AA, BB, PP);        
     }
 }
 
