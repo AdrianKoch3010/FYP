@@ -3,6 +3,9 @@ dependencies:
   # - witnet/elliptic-curve-solidity@0.2.1
 compiler:
   solc:
+    # version: 0.8.14
+    # optimizer:
+    #   enabled: true
     remappings:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.6.0'
       # - '@ecc=witnet/elliptic-curve-solidity@0.2.1'

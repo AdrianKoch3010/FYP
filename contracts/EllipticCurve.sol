@@ -1,6 +1,10 @@
+// contracts/EllipticCurve.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
+
+// This file is copied from https://github.com/witnet/elliptic-curve-solidity/blob/master/contracts/EllipticCurve.sol
+// The reason to copy the code rather than include it is that library uses a different version of solidity
 
 
 /**

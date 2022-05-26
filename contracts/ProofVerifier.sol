@@ -4,6 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "./P256.sol";
+import "./BigNum.sol";
 
 
 contract ProofVerifier {
@@ -18,6 +19,10 @@ contract ProofVerifier {
         int256 f;
         int256 z_a;
         int256 z_b;
+    }
+
+    function addBig(BigNum.instance memory a, BigNum.instance memory b) public pure returns (BigNum.instance memory) {
+        return BigNum.add(a, b);
     }
 
     //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
