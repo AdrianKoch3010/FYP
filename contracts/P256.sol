@@ -86,45 +86,31 @@ library ECC
 
     // Overload of the mul function taking a BigNum arguments
     function mul(BigNum.instance memory scalar, Point memory point) public pure returns(Point memory) {
+        // 0 * something = point at infinity
+        if (BigNum.isZero(scalar))
+            return Point(0, 0);
+
         uint256 x = 0;
         uint256 y = 0;
-        // if the scalar is negative, we have to invert the point
-        if (scalar.neg) {
-            uint256 xInv;
-            uint256 yInv;
-            (xInv, yInv) = EllipticCurve.ecInv(point.x, point.y, PP);
-            // Muliply for each of the array elements
-            for (uint256 i = 0; i < scalar.val.length; i++) {
-                uint256 xTmp = xInv;
-                uint256 yTmp = yInv;
-                // Multiply by the correct power of 128
-                for (uint256 j = 0; j < i; j++) {
-                    (xTmp, yTmp) = EllipticCurve.ecMul(2**128, xTmp, yTmp, AA, PP);
-                }
-                if (scalar.val[i] != 0)
-                    (xTmp, yTmp) = EllipticCurve.ecMul(uint256(scalar.val[i]), xTmp, yTmp, AA, PP);
-                else
-                    (xTmp, yTmp) = (0, 0);
-                (x, y) = EllipticCurve.ecAdd(x, y, xTmp, yTmp, AA, PP);
+        uint256 xInit = point.x;
+        uint256 yInit = point.y;
+        // When multiplying by a negative number, we have to invert the point
+        if (scalar.neg)
+            (xInit, yInit) = EllipticCurve.ecInv(point.x, point.y, PP);
+
+        for (uint256 i = 0; i < scalar.val.length; i++) {
+            uint256 xTmp = xInit;
+            uint256 yTmp = yInit;
+            // Multiply by the correct power of 128
+            for (uint256 j = 0; j < i; j++) {
+                (xTmp, yTmp) = EllipticCurve.ecMul(2**128, xTmp, yTmp, AA, PP);
             }
+            if (scalar.val[i] != 0)
+                (xTmp, yTmp) = EllipticCurve.ecMul(uint256(scalar.val[i]), xTmp, yTmp, AA, PP);
+            else
+                (xTmp, yTmp) = (0, 0);
+            (x, y) = EllipticCurve.ecAdd(x, y, xTmp, yTmp, AA, PP);
         }
-        else if (BigNum.isZero(scalar) == false) {
-            // Multiply for each of the array elements 
-            for (uint256 i = 0; i < scalar.val.length; i++) {
-                uint256 xTmp = point.x;
-                uint256 yTmp = point.y;
-                // Multiply by the correct power of 128
-                for (uint256 j = 0; j < i; j++) {
-                    (xTmp, yTmp) = EllipticCurve.ecMul(2**128, xTmp, yTmp, AA, PP);
-                }
-                if (scalar.val[i] != 0)
-                    (xTmp, yTmp) = EllipticCurve.ecMul(uint256(scalar.val[i]), xTmp, yTmp, AA, PP);
-                else
-                    (xTmp, yTmp) = (0, 0);
-                (x, y) = EllipticCurve.ecAdd(x, y, xTmp, yTmp, AA, PP);
-            }
-        }
-        // else --> (x, y) = (0, 0) from initialisation
         return Point(x, y);
     }
 

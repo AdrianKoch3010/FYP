@@ -16,9 +16,6 @@ contract ProofVerifier {
     struct Proof {
         ECC.Point c_a;
         ECC.Point c_b;
-        // int256 f;
-        // int256 z_a;
-        // int256 z_b;
         BigNum.instance f;
         BigNum.instance z_a;
         BigNum.instance z_b;
