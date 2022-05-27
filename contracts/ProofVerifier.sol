@@ -48,20 +48,19 @@ contract ProofVerifier {
         // Compute the challenge x
         //int256 x = 42;
         BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
-        x.val[0] = 1;
-        x.val[1] = 1;
+        x.val[0] = 123456789;
+        x.val[1] = 987654321;
 
         ECC.Point memory left = ECC.mul(x, commitment);
         left = ECC.add(left, proof.c_a);
         ECC.Point memory right = ECC.commit(proof.f, proof.z_a);
         bool check1 = ECC.isEqual(left, right);
 
-        // left = ECC.mul(BigNum.sub(x, proof.f), commitment);
-        // left = ECC.add(left, proof.c_b);
-        // //right = ECC.commit(0, proof.z_b);
-        // right = ECC.mul(proof.z_b, ECC.H());
-        // bool check2 = ECC.isEqual(left, right);
-        bool check2 = false;
+        left = ECC.mul(BigNum.sub(x, proof.f), commitment);
+        left = ECC.add(left, proof.c_b);
+        //right = ECC.commit(0, proof.z_b);
+        right = ECC.mul(proof.z_b, ECC.H());
+        bool check2 = ECC.isEqual(left, right);
 
         return (left, right, check1, check2);
     }

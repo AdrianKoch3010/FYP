@@ -32,8 +32,8 @@ def main():
     # uint256 z_a;
     # uint256 z_b;
     
-    _max = 1154
-    generate_new = False
+    _max = ch.p - 2
+    generate_new = True
 
     p = ch.p
     m = 1
@@ -61,7 +61,7 @@ def main():
 
     # Generate x
     #x = random.getrandbits(128)
-    x = ch.BigNum([1, 1]).to_int()
+    x = ch.BigNum([123456789, 987654321]).to_int()
     print('x:', x)
 
     f = m*x + a
@@ -102,10 +102,10 @@ def main():
     print('check1:', check1)
     print('check2:', check2)
 
-    left = ch.ECC_mul(x, C) + Ca
-    right = ch.ECC_commit(f, za)
+    #left = ch.ECC_mul(x, C) + Ca
+    #right = ch.ECC_commit(f, za)
     #print(f'Actual left: {left.x}, {left.y}')
-    print(f'Actual right: {right.x}, {right.y}')
+    #print(f'Actual right: {right.x}, {right.y}')
 
     # left = ch.ECC_mul(x-f, C) + Cb
     # right = ch.ECC_commit(0, zb)
