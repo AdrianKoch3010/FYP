@@ -25,6 +25,14 @@ contract ProofVerifier {
         return BigNum.add(a, b);
     }
 
+    function subBig(BigNum.instance memory a, BigNum.instance memory b) public pure returns (BigNum.instance memory) {
+        return BigNum.sub(a, b);
+    }
+
+    function mulBig(BigNum.instance memory a, BigNum.instance memory b) public pure returns (BigNum.instance memory) {
+        return BigNum.mul(a, b);
+    }
+
     //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
     function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (ECC.Point memory, ECC.Point memory, bool, bool) {
         // check1 = ECC_mul(x, C) + Ca == ECC_commit(f, za)

@@ -8,7 +8,7 @@ int main()
 	// test big number
 
 	BigNumber num1({ 0xFF, 0xFF });
-	BigNumber num2({ 0xFF, 0x00 }, true);
+	BigNumber num2({ 0xFF, 0x00 });
 
 	auto num3 = num1.add(num2);
 

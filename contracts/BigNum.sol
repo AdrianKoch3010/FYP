@@ -32,9 +32,14 @@ library BigNum {
         }
 
         // if there remains a carry, add it to the result
-        if (carry > 0)
-            result[max.length - 1] = uint128(carry);
-
+        if (carry > 0) {
+            result[result.length - 1] = uint128(carry);
+        // Otherwise get rid of the extra bit
+        }
+        else {
+            // resullt.length--
+            assembly { mstore(result, sub(mload(result), 1)) }
+        }
         return result;
     }
 
@@ -104,12 +109,23 @@ library BigNum {
         if (left.length < right.length)
             return -1;
         
-        uint lastIdx = left.length - 1;
-        if (left[lastIdx] == right[lastIdx])
-            return 0;
-        if (left[lastIdx] > right[lastIdx])
+        // From here on we know that both numbers are the same bit size
+	    // Therefore, we have to check the bytes, starting from the most significant one
+        for (uint i = left.length; i > 0; i--) {
+            if (left[i-1] > right[i-1])
+                return 1;
+            if (left[i-1] < right[i-1])
+                return -1;
+        }
+
+        // Check the least significant byte
+        if (left[0] > right[0])
             return 1;
-        return -1;
+        if (left[0] < right[0])
+            return -1;
+        
+        // Only if all of the bytes are equal, return 0
+        return 0;
     }
 
     function add(instance memory left, instance memory right) public pure returns (instance memory)
@@ -135,6 +151,33 @@ library BigNum {
                     return instance(addInternal(left.val, right.val), false);
                 else
                     return instance(addInternal(right.val, left.val), false);
+        }
+    }
+
+    // This function is not strictly neccessary, as add can be used for subtraction as well
+    function sub(instance memory left, instance memory right) public pure returns (instance memory)
+    {
+        int cmp = compare(left.val, right.val);
+
+        if (left.neg || right.neg) {
+            if (left.neg && right.neg) {
+                if (cmp > 0)
+                    return instance(subInternal(left.val, right.val), true);
+                else
+                    return instance(subInternal(right.val, left.val), false);
+            }
+            else {
+                if (cmp > 0)
+                    return instance(addInternal(left.val, right.val), left.neg);
+                else
+                    return instance(addInternal(right.val, left.val), left.neg);
+            }
+        }
+        else {
+            if (cmp > 0)
+                    return instance(subInternal(left.val, right.val), false);
+                else
+                    return instance(subInternal(right.val, left.val), true);
         }
     }
 

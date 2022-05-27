@@ -51,6 +51,55 @@ def pad_commitments(C: list) -> (list, int, int):
 def bytes_needed(n: int) -> int:
     n = math.ceil(math.log(n, 2))
     n = math.ceil(n / 8)
+    return n
+
+class BigNum:
+    # Constructor
+    def __init__(self, val, neg = False):
+        if isinstance(val, int):
+            self.val = []
+            bin_representation = bin(abs(val))[2:]
+            # pad the binary representation with zeros to a multiple of 128 bits
+            while len(bin_representation) % 128 != 0:
+                bin_representation = '0' + bin_representation
+
+            # append 128 bit chunks of x to arr
+            for i in range(0, len(bin_representation), 128):
+                self.val.append(int(bin_representation[i:i+128], 2))
+            self.val.reverse()
+            self.neg = val < 0
+        else:
+            self.val = val
+            self.neg = neg 
+    
+    def to_int(self):
+        num = 0
+        for i in range(len(self.val)):
+            num += self.val[i] * 2**(128*i)
+        if self.neg:
+            num = -num
+        return num
+
+    def to_tuple(self):
+        return (tuple(self.val), self.neg)
+
+    def __add__(self, other):
+        return BigNum(self.to_int() + other.to_int())
+
+    def __sub__(self, other):
+        return BigNum(self.to_int() - other.to_int())
+    
+    def __mul__(self, other):
+        return BigNum(self.to_int() * other.to_int())
+
+    def __eq__(self, other):
+        return self.to_int() == other.to_int()
+
+    def __str__(self):
+        return str(self.to_int())
+
+
+# Convert an int to a big_num
 
 
 #TODO: Write unit tetsts for calc_coeffs

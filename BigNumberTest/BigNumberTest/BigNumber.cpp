@@ -241,11 +241,20 @@ int internalCompare(BigNumber left, BigNumber right, bool isSigned)
 		return -1 * trigger;
 
 	// From here on we know that both numbers are the same bit size
-	// Therefore, the most significant byte matters
-	if (left.data.back() == right.data.back())
-		return 0;
-	
-	if (left.data.back() > right.data.back())
-		return 1 * trigger;
-	return -1 * trigger;
+	// Therefore, we have to check the bytes, starting from the most significant one
+	for (unsigned int i = left.data.size(); i > 0; i--) {
+		if (left.data[i - 1] > right.data[i - 1])
+			return 1;
+		if (left.data[i - 1] < right.data[i - 1])
+			return -1;
+	}
+
+	// Check the least significant byte
+	if (left.data[0] > right.data[0])
+		return 1;
+	if (left.data[0] < right.data[0])
+		return -1;
+
+	// Only if all of the bytes are equal, return 0
+	return 0;
 }
