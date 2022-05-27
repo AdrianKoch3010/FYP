@@ -17,11 +17,14 @@ public:
 	//BigNumber add(const BigNumber& other) const;
 	friend BigNumber::Data internalAdd(BigNumber::Data max, BigNumber::Data min);
 	friend BigNumber::Data internalSub(BigNumber::Data max, BigNumber::Data min);
+	friend BigNumber::Data internalMul(BigNumber::Data max, BigNumber::Data min);
 	friend int internalCompare(BigNumber left, BigNumber right, bool isSigned);
 
 	BigNumber add(BigNumber other) const;
 
 	BigNumber sub(BigNumber other) const;
+
+	BigNumber mul(BigNumber other) const;
 
 	//BigNumber mul(const BigNumber& other) const;
 
@@ -35,6 +38,7 @@ private:
 
 BigNumber::Data internalAdd(BigNumber::Data max, BigNumber::Data min);
 BigNumber::Data internalSub(BigNumber::Data max, BigNumber::Data min);
+BigNumber::Data internalMul(BigNumber::Data max, BigNumber::Data min);
 
 // 1 -->  left >  right
 // 0 -->  left == right

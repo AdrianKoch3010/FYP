@@ -1,5 +1,7 @@
 #include "BigNumber.hpp"
 #include <cmath>
+#include <iostream>
+#include <algorithm>
 #include <sstream>
 
 BigNumber::BigNumber() :
@@ -8,9 +10,10 @@ BigNumber::BigNumber() :
 }
 
 BigNumber::BigNumber(Data val, bool negative) :
-	data(val),
 	negative(negative)
 {
+	std::reverse(val.begin(), val.end());
+	data = val;
 }
 
 BigNumber BigNumber::add(BigNumber other) const
@@ -77,6 +80,19 @@ BigNumber BigNumber::sub(BigNumber other) const
 	}
 }
 
+BigNumber BigNumber::mul(BigNumber other) const
+{
+	// pos * pos => pos
+	// neg * neg => pos
+	// neg * pos => neg
+	// pos * neg => neg
+
+	if ((this->negative && other.negative) || (!this->negative && !other.negative))
+		return BigNumber(internalMul(this->data, other.data));
+	else
+		return BigNumber(internalMul(this->data, other.data), true);
+}
+
 std::string BigNumber::print() const
 {
 	std::stringstream ss;
@@ -84,7 +100,7 @@ std::string BigNumber::print() const
 		ss << "-";
 	for (auto item : data)
 	{
-		ss << "[" << (int)item << "]";
+		ss << "[" << std::hex << (int)item << "]";
 	}
 	return ss.str();
 }
@@ -99,10 +115,10 @@ BigNumber::Data internalAdd(BigNumber::Data max, BigNumber::Data min)
 	uint16_t carry = 0;
 	for (int i = 0; i < max.size(); i++)
 	{
-		// As long as there are still min bytes available
+		// As long as there are still right bytes available
 		uint16_t intermediate = 0;
 		if (i < min.size())
-			// Add the min corresponding min byte
+			// Add the right corresponding right byte
 			intermediate = (uint16_t)max[i] + (uint16_t)min[i] + carry;
 		else
 			intermediate = (uint16_t)max[i] + carry;
@@ -149,6 +165,52 @@ BigNumber::Data internalSub(BigNumber::Data max, BigNumber::Data min)
 	while (result.back() == 0 && result.size() > 1)
 		result.pop_back();
 
+	return result;
+}
+
+// Here it doesn't matter which one is bigger
+BigNumber::Data internalMul(BigNumber::Data left, BigNumber::Data right)
+{
+	const unsigned int shifter = pow(2, 8);
+	const unsigned int lowerMask = shifter - 1;
+
+	// The resulting array will be the length of one plus the other
+
+	BigNumber::Data result(left.size() + right.size(), 0);
+	for (int i = 0; i < right.size(); i++)
+	{
+		// calculate right[i] * left
+		uint16_t carry = 0;
+		for (int j = 0; j < left.size(); j++)
+		{
+			// calculate right[i] * left[j]
+
+			// The result will potentially utilise all 16 bits
+			uint16_t tmp = (uint16_t)right[i] * (uint16_t)left[j];
+
+			// Add this result at the correct position of the intermediate and take care of the overflow
+
+			uint8_t tmpLower = tmp & lowerMask;
+			uint8_t tmpHigher = tmp / shifter;
+
+			// Add both tmpLower and tmpHigher to the correct positions and take care of the carry
+			uint16_t intermediateLower = (uint16_t)tmpLower + (uint16_t)result[i + j];
+			result[i + j] = intermediateLower & lowerMask;
+			uint16_t intermediateCarry = intermediateLower / shifter;
+
+			uint16_t intermediateHigher = (uint16_t)tmpHigher + (uint16_t)result[i + j + 1] + intermediateCarry + carry;
+			result[i + j + 1] = intermediateHigher & lowerMask;
+			carry = intermediateHigher / shifter;
+		}
+		// There should never be a carry left over as the next iteration of the inner loop will reach one position further as the previous one
+		// and, hence, always add to 0
+		if (carry != 0)
+			std::cout << "Fuckery occured!" << std::endl;
+	}
+
+	// Clean up potentially 0 cells (but leave at least 1)
+	while (result.back() == 0 && result.size() > 1)
+		result.pop_back();
 	return result;
 }
 

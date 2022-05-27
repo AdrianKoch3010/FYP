@@ -10,10 +10,9 @@ library BigNum {
         bool neg;
     }
 
+    uint256 constant LOWER_MASK = 2**128 - 1;
+
     function addInternal(uint128[] memory max, uint128[] memory min) internal pure returns (uint128[] memory) {
-        // 2**128
-        //uint256 SHIFTER = 2**128;
-        uint256 LOWER_MASK = 2**128 - 1;
 
         // TODO: Only add 1 if overflow
         uint128[] memory result = new uint128[](max.length + 1);
@@ -39,7 +38,7 @@ library BigNum {
         return result;
     }
 
-    function subInternal(uint128[] memory min, uint128[] memory max) internal pure returns (uint128[] memory) {
+    function subInternal(uint128[] memory max, uint128[] memory min) internal pure returns (uint128[] memory) {
         
         uint128[] memory result = new uint128[](max.length);
         int256 carry = 0;
@@ -61,6 +60,39 @@ library BigNum {
             result[i] = uint128(uint256(intermediate));
         }
 
+        // Clean up leading zeros
+        while (result.length > 1 && result[result.length - 1] == 0)
+            // result.length--;
+            assembly { mstore(result, sub(mload(result), 1)) }
+
+
+        return result;
+    }
+
+    function mulInternal(uint128[] memory left, uint128[] memory right) internal pure returns (uint128[] memory) {
+        uint128[] memory result = new uint128[](left.length + right.length);
+        
+        // calculate right[i] * left
+        for (uint i = 0; i < left.length; i++) {
+            uint256 carry = 0;
+
+            // calculate right[i] * left[j]
+            for (uint j = 0; j < right.length; j++) {
+                uint256 tmp = uint256(left[i]) * uint256(right[i]);
+
+                uint256 tmpLower = tmp & LOWER_MASK;
+                uint256 tmpUpper = tmp >> 128;
+
+                // Add both tmpLower and tmpHigher to the correct positions and take care of the carry
+                uint256 intermediateLower = tmpLower + uint256(result[i + j]);
+			    result[i + j] = uint128(intermediateLower & LOWER_MASK);
+			    uint256 intermediateCarry = intermediateLower >> 128;
+
+			    uint256 intermediateUpper = tmpUpper + uint256(result[i + j + 1]) + intermediateCarry + carry;
+			    result[i + j + 1] = uint128(intermediateUpper & LOWER_MASK);
+			    carry = intermediateUpper >> 128;
+            }
+        }
         return result;
     }
 
@@ -104,5 +136,13 @@ library BigNum {
                 else
                     return instance(addInternal(right.val, left.val), false);
         }
+    }
+
+    function mul(instance memory left, instance memory right) public pure returns (instance memory)
+    {
+        if ((left.neg && right.neg) || (!left.neg && !right.neg))
+            return instance(mulInternal(left.val, right.val), false);
+        else
+            return instance(mulInternal(right.val, left.val), true);
     }
 }
