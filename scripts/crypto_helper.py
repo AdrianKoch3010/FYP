@@ -37,7 +37,6 @@ def ECC_mul(k: int, point: ECC.EccPoint) -> ECC.EccPoint:
     else:
         return k * point
 
-
 # Pad the list of commitments if its length is not a power of 2
 def pad_commitments(C: list) -> (list, int, int):
     n = len(C)
@@ -141,3 +140,29 @@ def calc_coeffs(n, i, l, A):
     return coeffs
 
 # print([calc_coeffs(3, i, 0b101, [3, 2, 5]) for i in range(8)])
+
+
+
+def ECC_mul_big_test(scalar: BigNum, point: ECC.EccPoint):
+    x = point.point_at_infinity()
+    # print(f'Point at infinity: {x.x, x.y}')
+    if scalar.neg == True:
+        for i in range(len(scalar.val)):
+            xInv = -point
+            for _ in range(i):
+                xInv = 2**128 * xInv
+            xInv = scalar.val[i] * xInv
+            x = x + xInv
+            # print('negative')
+            # print('x:', x.x, x.y)
+            # print(f'scalar.val[{i}]:', scalar.val[i])
+    elif scalar.to_int() != 0:
+        for i in range(len(scalar.val)):
+            tmp = point
+            for _ in range(i):
+                tmp = 2**128 * tmp
+            tmp = tmp * scalar.val[i]
+            x = x + tmp
+            # print('positive and not 0')
+            # print('x:', x.x, x.y)
+    return x

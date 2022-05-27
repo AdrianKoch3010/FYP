@@ -4,55 +4,8 @@
 pragma solidity ^0.8.0;
 
 import "./EllipticCurve.sol";
+import "./BigNum.sol";
 
-
-// contract Secp256k1 {
-
-//   uint256 public constant GX = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798;
-//   uint256 public constant GY = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8;
-//   uint256 public constant AA = 0;
-//   uint256 public constant BB = 7;
-//   uint256 public constant PP = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F;
-
-// function invMod(uint256 val, uint256 p) pure public returns (uint256)
-// {
-//     return EllipticCurve.invMod(val,p);
-// }
-
-// function expMod(uint256 val, uint256 e, uint256 p) pure public returns (uint256)
-// {
-//     return EllipticCurve.expMod(val,e,p);
-// }
-
-
-// function getY(uint8 prefix, uint256 x) pure public returns (uint256)
-// {
-//     return EllipticCurve.deriveY(prefix,x,AA,BB,PP);
-// }
-
-
-// function onCurve(uint256 x, uint256 y) pure public returns (bool)
-// {
-//     return EllipticCurve.isOnCurve(x,y,AA,BB,PP);
-// }
-
-// function inverse(uint256 x, uint256 y) pure public returns (uint256, 
-// uint256) {
-//     return EllipticCurve.ecInv(x,y,PP);
-//   }
-
-// function subtract(uint256 x1, uint256 y1,uint256 x2, uint256 y2 ) pure public returns (uint256, uint256) {
-//     return EllipticCurve.ecSub(x1,y1,x2,y2,AA,PP);
-//   }
-
-//   function add(uint256 x1, uint256 y1,uint256 x2, uint256 y2 ) pure public returns (uint256, uint256) {
-//     return EllipticCurve.ecAdd(x1,y1,x2,y2,AA,PP);
-//   }
-
-// function derivePubKey(uint256 privKey) pure public returns (uint256, uint256) {
-//     return EllipticCurve.ecMul(privKey,GX,GY,AA,PP);
-//   }
-// }
 
 library ECC 
 {
@@ -131,6 +84,50 @@ library ECC
         return Point(x, y);
     }
 
+    // Overload of the mul function taking a BigNum arguments
+    function mul(BigNum.instance memory scalar, Point memory point) public pure returns(Point memory) {
+        uint256 x = 0;
+        uint256 y = 0;
+        // if the scalar is negative, we have to invert the point
+        if (scalar.neg) {
+            uint256 xInv;
+            uint256 yInv;
+            (xInv, yInv) = EllipticCurve.ecInv(point.x, point.y, PP);
+            // Muliply for each of the array elements
+            for (uint256 i = 0; i < scalar.val.length; i++) {
+                uint256 xTmp = xInv;
+                uint256 yTmp = yInv;
+                // Multiply by the correct power of 128
+                for (uint256 j = 0; j < i; j++) {
+                    (xTmp, yTmp) = EllipticCurve.ecMul(2**128, xTmp, yTmp, AA, PP);
+                }
+                if (scalar.val[i] != 0)
+                    (xTmp, yTmp) = EllipticCurve.ecMul(uint256(scalar.val[i]), xTmp, yTmp, AA, PP);
+                else
+                    (xTmp, yTmp) = (0, 0);
+                (x, y) = EllipticCurve.ecAdd(x, y, xTmp, yTmp, AA, PP);
+            }
+        }
+        else if (BigNum.isZero(scalar) == false) {
+            // Multiply for each of the array elements 
+            for (uint256 i = 0; i < scalar.val.length; i++) {
+                uint256 xTmp = point.x;
+                uint256 yTmp = point.y;
+                // Multiply by the correct power of 128
+                for (uint256 j = 0; j < i; j++) {
+                    (xTmp, yTmp) = EllipticCurve.ecMul(2**128, xTmp, yTmp, AA, PP);
+                }
+                if (scalar.val[i] != 0)
+                    (xTmp, yTmp) = EllipticCurve.ecMul(uint256(scalar.val[i]), xTmp, yTmp, AA, PP);
+                else
+                    (xTmp, yTmp) = (0, 0);
+                (x, y) = EllipticCurve.ecAdd(x, y, xTmp, yTmp, AA, PP);
+            }
+        }
+        // else --> (x, y) = (0, 0) from initialisation
+        return Point(x, y);
+    }
+
     function pointAtInf() public pure returns (Point memory) {
         // uint256 x;
         // uint256 y;
@@ -139,6 +136,13 @@ library ECC
     }
 
     function commit(int256 m, int256 r) public pure returns (Point memory) {
+        Point memory left = mul(m, G());
+        Point memory right = mul(r, H());
+        return add(left, right);
+    }
+
+    // Overload of the commit function taking BigNum arguments
+    function commit(BigNum.instance memory m, BigNum.instance memory r) public pure returns (Point memory) {
         Point memory left = mul(m, G());
         Point memory right = mul(r, H());
         return add(left, right);

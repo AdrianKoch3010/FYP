@@ -12,8 +12,8 @@ def deploy():
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the libraries
     EllipticCurve.deploy({'from': account}, publish_source=pub_source)
-    ECC.deploy({'from': account}, publish_source=pub_source)
     BigNum.deploy({'from': account}, publish_source=pub_source)
+    ECC.deploy({'from': account}, publish_source=pub_source)
     # deploy the proof verifier
     proof_verifier = ProofVerifier.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed ProofVerifier to address: {proof_verifier.address}")
@@ -72,3 +72,29 @@ def main():
     result = ch.BigNum(tx_result[0], tx_result[1])
     print('result:', result)
     print('a*b == result:', a * b == result)
+
+    # Testing ecc mul
+    print('\n\nTesting ecc mul...')
+    m = 1
+    r = 1556
+    #print('m:', m)
+    #print('r:', r)
+
+    C = ch.ECC_commit(m, r)
+    x = 51651565615123116851231681351681321681318613516813163841351385541023186512035132135567116845334513248613216843168153
+    x_big = ch.BigNum(x)
+    print('x:', x)
+    print('big_x:', x_big.val)
+
+    # x*C
+    xC = ch.ECC_mul(x, C)
+    #xC_big = ch.ECC_mul_big_test(xBig, C)
+
+    print(f'xC: {xC.x}, {xC.y}')
+
+    result = proof_verifier.testEccMul(x_big.to_tuple(), [C.x, C.y])
+    print(f'result: {result[0]}, {result[1]}')
+    print(f'xC == result: {xC.x == result[0] and xC.y == result[1]}')
+
+    #print(f'xC_big: {xC_big.x}, {xC_big.y}')
+    #print(f'xC_big == xC: {xC_big.x == xC.x and xC_big.y == xC.y}')

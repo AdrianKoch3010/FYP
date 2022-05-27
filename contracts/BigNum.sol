@@ -188,4 +188,19 @@ library BigNum {
         else
             return instance(mulInternal(right.val, left.val), true);
     }
+
+    // Needed as there are multiple valid representations of 0
+    function isZero(instance memory num) public pure returns(bool) {
+        if (num.val.length == 0) {
+            return true;
+        }
+        else {
+            // all the array items must be zero
+            for (uint i = 0; i < num.val.length; i++) {
+                if (num.val[i] != 0)
+                    return false;
+            }
+        }
+        return true;
+    }
 }

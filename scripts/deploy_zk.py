@@ -1,5 +1,5 @@
 from Python.Python_Zerocoin.HelperFunctions import G
-from brownie import ProofVerifier, ECC, EllipticCurve, accounts, network, config
+from brownie import ProofVerifier, ECC, EllipticCurve, BigNum, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
@@ -12,6 +12,7 @@ def deploy():
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the libraries
     EllipticCurve.deploy({'from': account}, publish_source=pub_source)
+    BigNum.deploy({'from': account}, publish_source=pub_source)
     ECC.deploy({'from': account}, publish_source=pub_source)
     # deploy the proof verifier
     proof_verifier = ProofVerifier.deploy({'from': account}, publish_source=pub_source)
@@ -31,7 +32,7 @@ def main():
     # uint256 z_a;
     # uint256 z_b;
     
-    _max = 9876545678
+    _max = 1154
     generate_new = False
 
     p = ch.p
@@ -60,7 +61,7 @@ def main():
 
     # Generate x
     #x = random.getrandbits(128)
-    x = 42
+    x = ch.BigNum([1, 1]).to_int()
     print('x:', x)
 
     f = m*x + a
@@ -90,20 +91,25 @@ def main():
     print('zb: ', math.ceil(math.log(abs(zb), 2)))
 
     commitment = [C.x, C.y]
-    proof = [[Ca.x, Ca.y], [Cb.x, Cb.y], f, za, zb]
+    proof = [[Ca.x, Ca.y], [Cb.x, Cb.y], ch.BigNum(f).to_tuple(), ch.BigNum(za).to_tuple(), ch.BigNum(zb).to_tuple()]
     # print('commitment:', commitment)
     # print('proof:', proof)
 
     # Verify the proof
     left, right, check1, check2 = proof_verifier.verify(commitment, proof)
-    print('left:', left)
+    #print('left:', left)
     print('right:', right)
     print('check1:', check1)
     print('check2:', check2)
 
-    left = ch.ECC_mul(x-f, C) + Cb
-    right = ch.ECC_commit(0, zb)
-    print(f'Actual left: {left.x}, {left.y}')
+    left = ch.ECC_mul(x, C) + Ca
+    right = ch.ECC_commit(f, za)
+    #print(f'Actual left: {left.x}, {left.y}')
     print(f'Actual right: {right.x}, {right.y}')
-    print(f'Point at infinity: {G.point_at_infinity().x}, {G.point_at_infinity().y}')
+
+    # left = ch.ECC_mul(x-f, C) + Cb
+    # right = ch.ECC_commit(0, zb)
+    # print(f'Actual left: {left.x}, {left.y}')
+    # print(f'Actual right: {right.x}, {right.y}')
+    # print(f'Point at infinity: {G.point_at_infinity().x}, {G.point_at_infinity().y}')
 

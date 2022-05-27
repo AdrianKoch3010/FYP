@@ -4,7 +4,7 @@
 pragma solidity ^0.8.0;
 
 import "./P256.sol";
-import "./BigNum.sol";
+// import "./BigNum.sol";
 
 
 contract ProofVerifier {
@@ -16,9 +16,12 @@ contract ProofVerifier {
     struct Proof {
         ECC.Point c_a;
         ECC.Point c_b;
-        int256 f;
-        int256 z_a;
-        int256 z_b;
+        // int256 f;
+        // int256 z_a;
+        // int256 z_b;
+        BigNum.instance f;
+        BigNum.instance z_a;
+        BigNum.instance z_b;
     }
 
     function addBig(BigNum.instance memory a, BigNum.instance memory b) public pure returns (BigNum.instance memory) {
@@ -33,29 +36,33 @@ contract ProofVerifier {
         return BigNum.mul(a, b);
     }
 
+    function testEccMul(BigNum.instance memory scalar, ECC.Point memory point) public pure returns (ECC.Point memory) {
+        return ECC.mul(scalar, point);
+    }
+
     //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
     function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (ECC.Point memory, ECC.Point memory, bool, bool) {
         // check1 = ECC_mul(x, C) + Ca == ECC_commit(f, za)
         // check2 = ECC_mul(x-f, C) + Cb == ECC_commit(0, zb)
 
         // Compute the challenge x
-        // uint256 x = proof.c_a + proof.c_b;
-        int256 x = 42;
+        //int256 x = 42;
+        BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
+        x.val[0] = 1;
+        x.val[1] = 1;
 
         ECC.Point memory left = ECC.mul(x, commitment);
         left = ECC.add(left, proof.c_a);
         ECC.Point memory right = ECC.commit(proof.f, proof.z_a);
         bool check1 = ECC.isEqual(left, right);
 
-        left = ECC.mul(x - proof.f, commitment);
-        left = ECC.add(left, proof.c_b);
-        //right = ECC.commit(0, proof.z_b);
-        right = ECC.mul(proof.z_b, ECC.H());
-        bool check2 = ECC.isEqual(left, right);
+        // left = ECC.mul(BigNum.sub(x, proof.f), commitment);
+        // left = ECC.add(left, proof.c_b);
+        // //right = ECC.commit(0, proof.z_b);
+        // right = ECC.mul(proof.z_b, ECC.H());
+        // bool check2 = ECC.isEqual(left, right);
+        bool check2 = false;
 
         return (left, right, check1, check2);
-
-        // Check whether the commitment is on the curve
-        //return ECC.isOnCurve(commitment);
     }
 }
