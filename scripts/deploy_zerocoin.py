@@ -22,7 +22,7 @@ def main():
     proof_verifier = deploy()
 
     # Create 4 commitments, one of which is a commitment to 0
-    generate_new = False
+    generate_new = True
 
     # Create a list of commitments, one of which is a commitment to 0
     commitments = []
@@ -37,59 +37,43 @@ def main():
         if i == l:
             m = 0
         else:
-            m = random.randint(2, ch.p-2) if generate_new else (i + 234) * 5672
-        r = random.randint(2, ch.p-2) if generate_new else (i + 9876) * 987654321
+            m = random.randint(2, ch.p-2) if generate_new else (i + 234) * 567211321231
+        r = random.randint(2, ch.p-2) if generate_new else (i + 9876) * 987654321521321551235
         r_0_commitment = r if i == l else r_0_commitment
         commitments.append(ch.ECC_commit(m, r))
 
     # Create a proof
     proof = sp.generate_proof(commitments, 45, l, r_0_commitment)
 
+    # Verify the proof off-chain
+    print("Verifying proof off-chain...")
+    proof_valid, msg = sp.verify_proof(42, commitments, proof)
+    print("The proof is valid:", proof_valid)
+    print("Message:", msg)
+
     # Verify the proof on chain
+    print("Verifying proof on-chain...")
     # Generate commitment tuples
     commitments_tup = []
     for point in commitments:
         commitments_tup.append([point.x, point.y])
 
-    #print(commitment_tuples)
-
-    # for item in proof.to_tuple():
-    #     print(item)
-    #     print()
-
-    # Cl_tup = []
-    # Ca_tup = []
-    # Cb_tup = []
-    # Cd_tup = []
-    # # check that Cl, Ca, Cb, Cd are the same length
-    # assert len(proof.commitment.Cl) == len(proof.commitment.Ca) == len(proof.commitment.Cb) == len(proof.commitment.Cd)
-    # for i in range(len(proof.commitment.Cl)):
-    #     point = [proof.commitment.Cl[i].x, proof.commitment.Cl[i].y]
-    #     Cl_tup.append(point)
-    #     point = [proof.commitment.Ca[i].x, proof.commitment.Ca[i].y]
-    #     Ca_tup.append(point)
-    #     point = [proof.commitment.Cb[i].x, proof.commitment.Cb[i].y]
-    #     Cb_tup.append(point)
-    #     point = [proof.commitment.Cd[i].x, proof.commitment.Cd[i].y]
-    #     Cd_tup.append(point)
-        
-        
-    # # F, Za, Zb, zd must be converted to big numbers
-    # F_tup = []
-    # Za_tup = []
-    # Zb_tup = []
-    # for num in proof.response.F:
-    #     F_tup.append(ch.BigNum(num).to_tuple())
-    # for num in proof.response.Za:
-    #     Za_tup.append(ch.BigNum(num).to_tuple())
-    # for num in proof.response.Zb:
-    #     Zb_tup.append(ch.BigNum(num).to_tuple())
-
-    # zd_tup = ch.BigNum(proof.response.zd).to_tuple()
-
-    #result = proof_verifier.verify(proof.to_tuple(), commitment_tuples)
     result = proof_verifier.verify(commitments_tup, proof.to_tuple())
-    print(f"Proof verified: {result}")
+    #result = proof_verifier.verifyProofCheck3(2, ch.BigNum(123456789).to_tuple(), commitments_tup, proof.to_tuple())
+    #for num in result:
+        #print(ch.BigNum(num[0], num[1]).to_int())
+        #print(num)
+    print(f"Verification result: {result}")
+
+
+    # num = ch.BigNum(123456789)
+    # result = proof_verifier.testPow(num.to_tuple(), 40)
+    # print(f"Proof verified: {result}")
+    # res = ch.BigNum(result[0])
+    # actual_res = num.to_int() ** 40
+    # print(f"Actual result: {hex(actual_res)}")
+    # print(f"Result: {hex(res.to_int())}")
+    # print(f"Result == Actual Result: {res.to_int() == actual_res}")
 
     # # Verify the proof
     # proof_valid, msg = sp.verify_proof(45, commitments, proof)

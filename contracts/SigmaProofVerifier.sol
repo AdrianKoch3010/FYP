@@ -73,49 +73,55 @@ contract SigmaProofVerifier {
     // Check the commitment to 0
     function verifyProofCheck3(
         uint256 n,
-        ECC.Point[] memory commitments,
         BigNum.instance memory x,
-        BigNum.instance[] memory F,
-        ECC.Point[] memory C_d,
-        BigNum.instance memory z_d)
-    internal pure returns (bool check) {
+        ECC.Point[] memory commitments,
+        SigmaProof memory proof)
+    public pure returns (bool check) {
         // Declare the left and right side of the check
         ECC.Point memory left;
         ECC.Point memory right;
-        uint256 N = n**2;
+        
+        uint256 N = 2**n;
+        //uint256 N = 4;
 
         ECC.Point memory leftSum = ECC.pointAtInf();
+        BigNum.instance memory product;
         for (uint256 i = 0; i < N; i++) {
             // Calculate the product of F_j, i_j
-            BigNum.instance memory product = BigNum.instance(new uint128[](1), false);
-            product.val[0] = 1;
-
+            product = BigNum._new(1);
             for (uint256 j = 0; j < n; j++) {
-                uint256 i_j = i >> j & 1;
+                uint256 i_j = (i >> j) & 1;
                 if (i_j == 1)
-                    product = BigNum.mul(product, F[j]);
+                    product = BigNum.mul(product, proof.F[j]);
                 else
-                    product = BigNum.mul(product, BigNum.sub(x, F[j]));
+                    product = BigNum.mul(product, BigNum.sub(x, proof.F[j]));
             }
             leftSum = ECC.add(leftSum, ECC.mul(product, commitments[i]));
         }
 
         // Calculate the sum of the other commitments
         ECC.Point memory rightSum = ECC.pointAtInf();
-        BigNum.instance memory xPowk = BigNum.instance(new uint128[](1), false);
-        xPowk.val[0] = 1;
+        BigNum.instance memory xPowk = BigNum._new(1);
         for (uint256 k = 0; k < n; k++) {
             xPowk.neg = true;
-            rightSum = ECC.add(rightSum, ECC.mul(xPowk, C_d[k]));
+            rightSum = ECC.add(rightSum, ECC.mul(xPowk, proof.C_d[k]));
             xPowk.neg = false;
             xPowk = BigNum.mul(xPowk, x);
         }
 
         left = ECC.add(leftSum, rightSum);
         // ECC.Point memory right = ECC.commit(0, proof.z_d);
-        right = ECC.mul(z_d, ECC.H());
+        right = ECC.mul(proof.z_d, ECC.H());
         check = ECC.isEqual(left, right);
     }
+
+    // function testPow(BigNum.instance memory num, uint256 pow) public pure returns (BigNum.instance memory result) {
+    //     result = BigNum._new(1);
+
+    //     for (uint256 i = 0; i < pow; i++) {
+    //         result = BigNum.mul(result, num);
+    //     }
+    // }
 
     //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
     function verify(ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bool check1, bool check2, bool check3) {
@@ -124,12 +130,14 @@ contract SigmaProofVerifier {
         uint256 n = 2;
 
         // For now, hardcode the challenge
-        BigNum.instance memory x = BigNum.instance(new uint128[](1), false);
-        x.val[0] = 123456789;
+        BigNum.instance memory x = BigNum._new(123456789);
 
         check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
         check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
+        // check1 = false;
+        // check2 = false;
         //check3 = verifyProofCheck3(n, commitments, x, proof.F, proof.C_d, proof.z_d);
-        check3 = false;
+        check3 = verifyProofCheck3(n, x, commitments, proof);
+        //check3 = false;
     }
 }

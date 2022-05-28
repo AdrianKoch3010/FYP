@@ -12,6 +12,19 @@ library BigNum {
 
     uint256 constant LOWER_MASK = 2**128 - 1;
 
+    function _new(int128 num) internal pure returns (instance memory) {
+        instance memory ret;
+        ret.val = new uint128[](1);
+        if (num < 0) {
+            ret.neg = true;
+            ret.val[0] = uint128(-num);
+        } else {
+            ret.neg = false;
+            ret.val[0] = uint128(num);
+        }
+        return ret;
+    }
+
     function addInternal(uint128[] memory max, uint128[] memory min) internal pure returns (uint128[] memory) {
 
         // TODO: Only add 1 if overflow
@@ -76,14 +89,24 @@ library BigNum {
 
     function mulInternal(uint128[] memory left, uint128[] memory right) internal pure returns (uint128[] memory) {
         uint128[] memory result = new uint128[](left.length + right.length);
-        
+       
         // calculate right[i] * left
-        for (uint i = 0; i < left.length; i++) {
+        for (uint256 i = 0; i < left.length; i++) {
             uint256 carry = 0;
 
             // calculate right[i] * left[j]
-            for (uint j = 0; j < right.length; j++) {
-                uint256 tmp = uint256(left[i]) * uint256(right[i]);
+            for (uint256 j = 0; j < right.length; j++) {
+                // Multiply with current digit of first number and add result to previously stored result at current position.
+                uint256 tmp = uint256(left[i]) * uint256(right[j]);// + uint256(result[i + j]) + carry;
+
+                // // Carry for the next iteration
+                // carry = tmp >> 128;
+
+                // // Store the result
+                // result[i + j] = uint128(tmp & LOWER_MASK);
+
+                // // Store the carry in the next cell
+                // result[i + j + 1] += uint128(carry);
 
                 uint256 tmpLower = tmp & LOWER_MASK;
                 uint256 tmpUpper = tmp >> 128;
@@ -98,6 +121,11 @@ library BigNum {
 			    carry = intermediateUpper >> 128;
             }
         }
+        // Get rid of leading zeros
+        while (result.length > 1 && result[result.length - 1] == 0)
+            // result.length--;
+            assembly { mstore(result, sub(mload(result), 1)) }
+
         return result;
     }
 
@@ -186,7 +214,7 @@ library BigNum {
         if ((left.neg && right.neg) || (!left.neg && !right.neg))
             return instance(mulInternal(left.val, right.val), false);
         else
-            return instance(mulInternal(right.val, left.val), true);
+            return instance(mulInternal(left.val, right.val), true);
     }
 
     // Needed as there are multiple valid representations of 0

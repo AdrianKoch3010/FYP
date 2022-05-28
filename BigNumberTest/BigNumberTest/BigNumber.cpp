@@ -12,7 +12,7 @@ BigNumber::BigNumber() :
 BigNumber::BigNumber(Data val, bool negative) :
 	negative(negative)
 {
-	std::reverse(val.begin(), val.end());
+	//std::reverse(val.begin(), val.end());
 	data = val;
 }
 
@@ -105,6 +105,23 @@ std::string BigNumber::print() const
 	return ss.str();
 }
 
+int BigNumber::toInt() const
+{
+	int num = 0;
+	for (int i = 0; i < data.size(); i++)
+		num += data[i] * pow(2, 8 * i);
+	if (negative)
+		num = -num;
+	return num;
+}
+
+//num = 0
+//for i in range(len(self.val)) :
+//	num += self.val[i] * 2 * *(128 * i)
+//if self.neg :
+//	num = -num
+//	return num
+
 // Always interpreted as unsigned
 BigNumber::Data internalAdd(BigNumber::Data max, BigNumber::Data min)
 {
@@ -175,38 +192,52 @@ BigNumber::Data internalMul(BigNumber::Data left, BigNumber::Data right)
 	const unsigned int lowerMask = shifter - 1;
 
 	// The resulting array will be the length of one plus the other
+	//std::reverse(left.begin(), left.end());
+	//std::reverse(right.begin(), right.end());
 
 	BigNumber::Data result(left.size() + right.size(), 0);
-	for (int i = 0; i < right.size(); i++)
+	for (int i = 0; i < left.size(); i++)
 	{
-		// calculate right[i] * left
+		// calculate left[i] * right
 		uint16_t carry = 0;
-		for (int j = 0; j < left.size(); j++)
+		for (int j = 0; j < right.size(); j++)
 		{
-			// calculate right[i] * left[j]
+			// calculate left[i] * right[j]
 
 			// The result will potentially utilise all 16 bits
-			uint16_t tmp = (uint16_t)right[i] * (uint16_t)left[j];
+			// Multiply with current digit of first number and add result to previously stored result at current position.
+			uint16_t tmp = (uint16_t)left[i] * (uint16_t)right[j] + (uint16_t)result[i + j] + carry;
 
-			// Add this result at the correct position of the intermediate and take care of the overflow
+			// carry for the next iteration
+			carry = tmp / shifter;
 
-			uint8_t tmpLower = tmp & lowerMask;
-			uint8_t tmpHigher = tmp / shifter;
+			// Store the result
+			result[i + j] = tmp & lowerMask;
 
-			// Add both tmpLower and tmpHigher to the correct positions and take care of the carry
-			uint16_t intermediateLower = (uint16_t)tmpLower + (uint16_t)result[i + j];
-			result[i + j] = intermediateLower & lowerMask;
-			uint16_t intermediateCarry = intermediateLower / shifter;
+			// Store the carry in the next cell
+			result[i + j + 1] += carry;
 
-			uint16_t intermediateHigher = (uint16_t)tmpHigher + (uint16_t)result[i + j + 1] + intermediateCarry + carry;
-			result[i + j + 1] = intermediateHigher & lowerMask;
-			carry = intermediateHigher / shifter;
+			//// Add this result at the correct position of the intermediate and take care of the overflow
+
+			//uint8_t tmpLower = tmp & lowerMask;
+			//uint8_t tmpHigher = tmp / shifter;
+
+			//// Add both tmpLower and tmpHigher to the correct positions and take care of the carry
+			//uint16_t intermediateLower = (uint16_t)tmpLower + (uint16_t)result[i + j];
+			//result[i + j] = intermediateLower & lowerMask;
+			//uint16_t intermediateCarry = intermediateLower / shifter;
+
+			//uint16_t intermediateHigher = (uint16_t)tmpHigher + (uint16_t)result[i + j + 1] + intermediateCarry + carry;
+			//result[i + j + 1] = intermediateHigher & lowerMask;
+			//carry = intermediateHigher / shifter;
 		}
 		// There should never be a carry left over as the next iteration of the inner loop will reach one position further as the previous one
 		// and, hence, always add to 0
 		if (carry != 0)
 			std::cout << "Fuckery occured!" << std::endl;
 	}
+
+	//std::reverse(result.begin(), result.end());
 
 	// Clean up potentially 0 cells (but leave at least 1)
 	while (result.back() == 0 && result.size() > 1)

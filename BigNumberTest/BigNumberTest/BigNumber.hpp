@@ -26,6 +26,8 @@ public:
 
 	BigNumber mul(BigNumber other) const;
 
+	int toInt() const;
+
 	//BigNumber mul(const BigNumber& other) const;
 
 	std::string print() const;

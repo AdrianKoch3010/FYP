@@ -119,11 +119,11 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     Cd = []
 
     for j in range(n):
-        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 34567
-        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 3543
-        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 354
-        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 3456
-        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373
+        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 3456712131321233999999
+        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 354315123132132999999999
+        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 3544854894513229999999
+        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 3456848423123132999999
+        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373745132123132999999
         R.append(r)
         A.append(a)
         S.append(s)
@@ -223,18 +223,21 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, st
         check2 = check2 and (left == right)
 
     print('Checking commitment to 0')
-    outer_sum = ch.G.point_at_infinity()
+    left_sum = ch.G.point_at_infinity()
     for i in range(N):
         # Calculate the product of f_j,i_j
         product = 1
         for j in range(n):
-            i_j = i >> j & 1
+            i_j = (i >> j) & 1
             if i_j == 1:
                 product *= F[j]
+                print('product:', ch.BigNum(product).val)
             else:
                 product *= x - F[j]
-        outer_sum += ch.ECC_mul(product, commitments[i])
-    left_sum = outer_sum
+                print('product:', ch.BigNum(product).val)
+        left_sum += ch.ECC_mul(product, commitments[i])
+
+    #print(f'left_sum: {left_sum.x}, {left_sum.y}')
 
     # Calculate the sum of the other commitments
     right_sum = ch.G.point_at_infinity()
@@ -242,7 +245,7 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, st
         right_sum += ch.ECC_mul(-pow(x, k), Cd[k])
 
 
-    print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
+    #print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
 
     left = left_sum + right_sum
     right = ch.ECC_commit(0, zd)
