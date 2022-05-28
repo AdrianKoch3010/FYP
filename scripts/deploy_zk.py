@@ -11,9 +11,9 @@ def deploy():
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the libraries
-    EllipticCurve.deploy({'from': account}, publish_source=pub_source)
-    BigNum.deploy({'from': account}, publish_source=pub_source)
-    ECC.deploy({'from': account}, publish_source=pub_source)
+    #EllipticCurve.deploy({'from': account}, publish_source=pub_source)
+    #BigNum.deploy({'from': account}, publish_source=pub_source)
+    #ECC.deploy({'from': account}, publish_source=pub_source)
     # deploy the proof verifier
     proof_verifier = ProofVerifier.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed ProofVerifier to address: {proof_verifier.address}")

@@ -128,7 +128,7 @@ library BigNum {
         return 0;
     }
 
-    function add(instance memory left, instance memory right) public pure returns (instance memory)
+    function add(instance memory left, instance memory right) internal pure returns (instance memory)
     {
         int cmp = compare(left.val, right.val);
 
@@ -155,7 +155,7 @@ library BigNum {
     }
 
     // This function is not strictly neccessary, as add can be used for subtraction as well
-    function sub(instance memory left, instance memory right) public pure returns (instance memory)
+    function sub(instance memory left, instance memory right) internal pure returns (instance memory)
     {
         int cmp = compare(left.val, right.val);
 
@@ -181,7 +181,7 @@ library BigNum {
         }
     }
 
-    function mul(instance memory left, instance memory right) public pure returns (instance memory)
+    function mul(instance memory left, instance memory right) internal pure returns (instance memory)
     {
         if ((left.neg && right.neg) || (!left.neg && !right.neg))
             return instance(mulInternal(left.val, right.val), false);
@@ -190,7 +190,7 @@ library BigNum {
     }
 
     // Needed as there are multiple valid representations of 0
-    function isZero(instance memory num) public pure returns(bool) {
+    function isZero(instance memory num) internal pure returns(bool) {
         if (num.val.length == 0) {
             return true;
         }

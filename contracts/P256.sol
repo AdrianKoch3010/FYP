@@ -28,41 +28,41 @@ library ECC
         uint256 y;
     }
 
-    function G() public pure returns (Point memory) {
+    function G() internal pure returns (Point memory) {
         return Point(GX, GY);
     }
 
     // TODO: calculate values for H
-    function H() public pure returns (Point memory) {
+    function H() internal pure returns (Point memory) {
         return Point(HX, HY);
     }
 
-    function isEqual(Point memory left, Point memory right) public pure returns (bool) {
+    function isEqual(Point memory left, Point memory right) internal pure returns (bool) {
         return left.x == right.x && left.y == right.y;
     }
 
-    function inv(Point memory point) public pure returns (Point memory) {
+    function inv(Point memory point) internal pure returns (Point memory) {
         uint256 x;
         uint256 y;
         (x, y) = EllipticCurve.ecInv(point.x, point.y, PP);
         return Point(x, y);
     }
 
-    function add(Point memory left, Point memory right) public pure returns (Point memory) {
+    function add(Point memory left, Point memory right) internal pure returns (Point memory) {
         uint256 x;
         uint256 y;
         (x, y) = EllipticCurve.ecAdd(left.x, left.y, right.x, right.y, AA, PP);
         return Point(x, y);
     }
 
-    function sub(Point memory left, Point memory right) public pure returns (Point memory) {
+    function sub(Point memory left, Point memory right) internal pure returns (Point memory) {
         uint256 x;
         uint256 y;
         (x, y) = EllipticCurve.ecSub(left.x, left.y, right.x, right.y, AA, PP);
         return Point(x, y);
     }
 
-    function mul(int256 scalar, Point memory point) public pure returns (Point memory) {
+    function mul(int256 scalar, Point memory point) internal pure returns (Point memory) {
         uint256 x;
         uint256 y;
         // if the scalar is negative, we have to invert the point
@@ -85,7 +85,7 @@ library ECC
     }
 
     // Overload of the mul function taking a BigNum arguments
-    function mul(BigNum.instance memory scalar, Point memory point) public pure returns(Point memory) {
+    function mul(BigNum.instance memory scalar, Point memory point) internal pure returns(Point memory) {
         // 0 * something = point at infinity
         if (BigNum.isZero(scalar))
             return Point(0, 0);
@@ -114,27 +114,27 @@ library ECC
         return Point(x, y);
     }
 
-    function pointAtInf() public pure returns (Point memory) {
+    function pointAtInf() internal pure returns (Point memory) {
         // uint256 x;
         // uint256 y;
         // (x, y) = EllipticCurve.toAffine(0, 1, 0, PP);
         return Point(0, 0);
     }
 
-    function commit(int256 m, int256 r) public pure returns (Point memory) {
+    function commit(int256 m, int256 r) internal pure returns (Point memory) {
         Point memory left = mul(m, G());
         Point memory right = mul(r, H());
         return add(left, right);
     }
 
     // Overload of the commit function taking BigNum arguments
-    function commit(BigNum.instance memory m, BigNum.instance memory r) public pure returns (Point memory) {
+    function commit(BigNum.instance memory m, BigNum.instance memory r) internal pure returns (Point memory) {
         Point memory left = mul(m, G());
         Point memory right = mul(r, H());
         return add(left, right);
     }
 
-    function isOnCurve(Point memory point) public pure returns (bool) {
+    function isOnCurve(Point memory point) internal pure returns (bool) {
         return EllipticCurve.isOnCurve(point.x, point.y, AA, BB, PP);        
     }
 }
