@@ -25,7 +25,7 @@ contract SigmaProofVerifier {
     }
 
     // Check the commitments to l part 1
-    function verifyCheck1(
+    function verifyProofCheck1(
         uint256 n,
         BigNum.instance memory x,
         ECC.Point[] memory C_l, 
@@ -48,7 +48,7 @@ contract SigmaProofVerifier {
     }
 
     // Check the commitments to l part 2
-    function verifyCheck2(
+    function verifyProofCheck2(
         uint256 n,
         BigNum.instance memory x,
         ECC.Point[] memory C_l, 
@@ -71,7 +71,7 @@ contract SigmaProofVerifier {
     }
 
     // Check the commitment to 0
-    function verifyCheck3(
+    function verifyProofCheck3(
         uint256 n,
         ECC.Point[] memory commitments,
         BigNum.instance memory x,
@@ -121,66 +121,15 @@ contract SigmaProofVerifier {
     function verify(ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bool check1, bool check2, bool check3) {
         
         // For now, hardcode the length of the commitment list
-        uint256 N = 4;
         uint256 n = 2;
 
         // For now, hardcode the challenge
-        BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
+        BigNum.instance memory x = BigNum.instance(new uint128[](1), false);
         x.val[0] = 123456789;
-        x.val[1] = 987654321;
 
-        ECC.Point memory left;
-        ECC.Point memory right;
-
-        // Check the commitments to l
-        check1 = true;
-        for (uint256 i = 0; i < n; i++) {
-            left = ECC.mul(x, proof.C_l[i]);
-            left = ECC.add(left, proof.C_a[i]);
-            right = ECC.commit(proof.F[i], proof.Z_a[i]);
-            check1 = check1 && ECC.isEqual(left, right);
-        }
-
-        check2 = true;
-        for (uint256 i = 0; i < n; i++) {
-            left = ECC.mul(BigNum.sub(x, proof.F[i]), proof.C_l[i]);
-            left = ECC.add(left, proof.C_b[i]);
-            //ECC.Point memory right = ECC.commit(0, proof.Z_b[i]);
-            right = ECC.mul(proof.Z_b[i], ECC.H());
-            check2 = check2 && ECC.isEqual(left, right);
-        }
-
-        // Check the commitment to 0
-        ECC.Point memory leftSum = ECC.pointAtInf();
-        for (uint256 i = 0; i < N; i++) {
-            // Calculate the product of F_j, i_j
-            BigNum.instance memory product = BigNum.instance(new uint128[](1), false);
-            product.val[0] = 1;
-
-            for (uint256 j = 0; j < n; j++) {
-                uint256 i_j = i >> j & 1;
-                if (i_j == 1)
-                    product = BigNum.mul(product, proof.F[j]);
-                else
-                    product = BigNum.mul(product, BigNum.sub(x, proof.F[j]));
-            }
-            leftSum = ECC.add(leftSum, ECC.mul(product, commitments[i]));
-        }
-
-        // Calculate the sum of the other commitments
-        ECC.Point memory rightSum = ECC.pointAtInf();
-        BigNum.instance memory xPowk = BigNum.instance(new uint128[](1), false);
-        xPowk.val[0] = 1;
-        for (uint256 k = 0; k < n; k++) {
-            xPowk.neg = true;
-            rightSum = ECC.add(rightSum, ECC.mul(xPowk, proof.C_d[k]));
-            xPowk.neg = false;
-            xPowk = BigNum.mul(xPowk, x);
-        }
-
-        left = ECC.add(leftSum, rightSum);
-        // ECC.Point memory right = ECC.commit(0, proof.z_d);
-        right = ECC.mul(proof.z_d, ECC.H());
-        check3 = ECC.isEqual(left, right);
+        check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
+        check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
+        //check3 = verifyProofCheck3(n, commitments, x, proof.F, proof.C_d, proof.z_d);
+        check3 = false;
     }
 }
