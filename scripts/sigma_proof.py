@@ -231,10 +231,8 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, st
             i_j = (i >> j) & 1
             if i_j == 1:
                 product *= F[j]
-                print('product:', ch.BigNum(product).val)
             else:
                 product *= x - F[j]
-                print('product:', ch.BigNum(product).val)
         left_sum += ch.ECC_mul(product, commitments[i])
 
     #print(f'left_sum: {left_sum.x}, {left_sum.y}')

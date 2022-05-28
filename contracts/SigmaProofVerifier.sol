@@ -4,7 +4,6 @@
 pragma solidity ^0.8.0;
 
 import "./P256.sol";
-// import "./BigNum.sol";
 
 
 contract SigmaProofVerifier {
@@ -76,7 +75,7 @@ contract SigmaProofVerifier {
         BigNum.instance memory x,
         ECC.Point[] memory commitments,
         SigmaProof memory proof)
-    public pure returns (bool check) {
+    internal pure returns (bool check) {
         // Declare the left and right side of the check
         ECC.Point memory left;
         ECC.Point memory right;
@@ -115,15 +114,6 @@ contract SigmaProofVerifier {
         check = ECC.isEqual(left, right);
     }
 
-    // function testPow(BigNum.instance memory num, uint256 pow) public pure returns (BigNum.instance memory result) {
-    //     result = BigNum._new(1);
-
-    //     for (uint256 i = 0; i < pow; i++) {
-    //         result = BigNum.mul(result, num);
-    //     }
-    // }
-
-    //function verify(ECC.Point memory commitment, Proof memory proof) public pure returns (bool, bool) {
     function verify(ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bool check1, bool check2, bool check3) {
         
         // For now, hardcode the length of the commitment list
@@ -134,10 +124,6 @@ contract SigmaProofVerifier {
 
         check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
         check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
-        // check1 = false;
-        // check2 = false;
-        //check3 = verifyProofCheck3(n, commitments, x, proof.F, proof.C_d, proof.z_d);
         check3 = verifyProofCheck3(n, x, commitments, proof);
-        //check3 = false;
     }
 }

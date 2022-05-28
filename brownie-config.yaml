@@ -14,7 +14,7 @@ wallets:
 networks:
   default: development
   rinkeby:
-    verify: False
+    verify: True
   kovan:
     verify: True
   development:

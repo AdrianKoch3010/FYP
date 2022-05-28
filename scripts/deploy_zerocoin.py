@@ -59,23 +59,4 @@ def main():
         commitments_tup.append([point.x, point.y])
 
     result = proof_verifier.verify(commitments_tup, proof.to_tuple())
-    #result = proof_verifier.verifyProofCheck3(2, ch.BigNum(123456789).to_tuple(), commitments_tup, proof.to_tuple())
-    #for num in result:
-        #print(ch.BigNum(num[0], num[1]).to_int())
-        #print(num)
     print(f"Verification result: {result}")
-
-
-    # num = ch.BigNum(123456789)
-    # result = proof_verifier.testPow(num.to_tuple(), 40)
-    # print(f"Proof verified: {result}")
-    # res = ch.BigNum(result[0])
-    # actual_res = num.to_int() ** 40
-    # print(f"Actual result: {hex(actual_res)}")
-    # print(f"Result: {hex(res.to_int())}")
-    # print(f"Result == Actual Result: {res.to_int() == actual_res}")
-
-    # # Verify the proof
-    # proof_valid, msg = sp.verify_proof(45, commitments, proof)
-    # print("The proof is valid:", proof_valid)
-    # print("Message:", msg)

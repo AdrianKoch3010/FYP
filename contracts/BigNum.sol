@@ -90,23 +90,14 @@ library BigNum {
     function mulInternal(uint128[] memory left, uint128[] memory right) internal pure returns (uint128[] memory) {
         uint128[] memory result = new uint128[](left.length + right.length);
        
-        // calculate right[i] * left
+        // calculate left[i] * right
         for (uint256 i = 0; i < left.length; i++) {
             uint256 carry = 0;
 
-            // calculate right[i] * left[j]
+            // calculate left[i] * right[j]
             for (uint256 j = 0; j < right.length; j++) {
                 // Multiply with current digit of first number and add result to previously stored result at current position.
-                uint256 tmp = uint256(left[i]) * uint256(right[j]);// + uint256(result[i + j]) + carry;
-
-                // // Carry for the next iteration
-                // carry = tmp >> 128;
-
-                // // Store the result
-                // result[i + j] = uint128(tmp & LOWER_MASK);
-
-                // // Store the carry in the next cell
-                // result[i + j + 1] += uint128(carry);
+                uint256 tmp = uint256(left[i]) * uint256(right[j]);
 
                 uint256 tmpLower = tmp & LOWER_MASK;
                 uint256 tmpUpper = tmp >> 128;
