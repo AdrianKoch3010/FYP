@@ -1,4 +1,4 @@
-// contracts/ProofVerifier.sol
+// contracts/SimpleProofVerifier.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
@@ -7,7 +7,7 @@ import "./P256.sol";
 // import "./BigNum.sol";
 
 
-contract ProofVerifier {
+contract SimpleProofVerifier {
 
     // Constructor
     constructor() {

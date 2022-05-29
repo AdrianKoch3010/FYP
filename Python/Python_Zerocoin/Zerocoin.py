@@ -41,7 +41,6 @@ class Blockchain:
         for comm in C_padded:
             commitments.append(comm + -ECC_commit(coin.S, 0))
 
-        
         proof = generate_proof(commitments, coin.S, coin.l, coin.r)
         return proof, coin.S
 
@@ -74,10 +73,11 @@ if __name__ == "__main__":
     blockchain = Blockchain()
 
     # Mint some coins
-    coins = [blockchain.mint_coin() for i in range(10)]
+    coins = [blockchain.mint_coin() for i in range(1)]
+    blockchain.C.append(ECC.EccPoint(0, 0))
 
     # Spend the coin
-    proof, S = blockchain.spend_coin(coins[4])
+    proof, S = blockchain.spend_coin(coins[0])
 
     # Verify the spend
     proof_valid, msg = blockchain.verify_spend(S, proof)

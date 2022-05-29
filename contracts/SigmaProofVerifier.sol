@@ -6,13 +6,9 @@ pragma solidity ^0.8.0;
 import "./P256.sol";
 
 
-contract SigmaProofVerifier {
+library SigmaProofVerifier {
 
-    // Constructor
-    constructor() {
-    }
-
-    struct SigmaProof {
+    struct Proof {
         ECC.Point[] C_l;
         ECC.Point[] C_a;
         ECC.Point[] C_b;
@@ -74,7 +70,7 @@ contract SigmaProofVerifier {
         uint256 n,
         BigNum.instance memory x,
         ECC.Point[] memory commitments,
-        SigmaProof memory proof)
+        Proof memory proof)
     internal pure returns (bool check) {
         // Declare the left and right side of the check
         ECC.Point memory left;
@@ -118,7 +114,7 @@ contract SigmaProofVerifier {
         uint256 serialNumber,
         bytes memory message,
         ECC.Point[] memory commitments,
-        SigmaProof memory proof)
+        Proof memory proof)
     internal pure returns (bytes32 result) {
         // Hash the serial number
         result = sha256(abi.encodePacked(serialNumber));
@@ -144,19 +140,20 @@ contract SigmaProofVerifier {
     }
 
     function verify(
+        uint256 serialNumber,
         ECC.Point[] memory commitments,
         uint256 n,
-        SigmaProof memory proof)
-    public pure returns (bool check1, bool check2, bool check3) {
+        Proof memory proof)
+    internal pure returns (bool result) {
         // Compute the hash used for the challenge
-        uint256 xInt = uint256(hashAll(42, "Adrian", commitments, proof));
+        uint256 xInt = uint256(hashAll(serialNumber, "Adrian", commitments, proof));
         BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
         x.val[0] = uint128(xInt & BigNum.LOWER_MASK);
         x.val[1] = uint128(xInt >> 128);
 
-        check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
-        check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
-        check3 = verifyProofCheck3(n, x, commitments, proof);
+        result = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
+        result = result && verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
+        result = result && verifyProofCheck3(n, x, commitments, proof);
     }
 
 

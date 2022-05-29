@@ -38,7 +38,7 @@ def ECC_mul(k: int, point: ECC.EccPoint) -> ECC.EccPoint:
         return k * point
 
 # Pad the list of commitments if its length is not a power of 2
-def pad_commitments(C: list) -> (list, int, int):
+def pad_commitments(C):
     n = len(C)
     N = 2**math.ceil(math.log(n, 2))
     if N == n:
