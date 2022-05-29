@@ -40,43 +40,29 @@ def create_commitments(n: int, l: int, generate_new = True):
 
 def main():
     # Deploy the contract
-    proof_verifier = deploy()
-    #proof_verifier = SigmaProofVerifier[-1]
+    #proof_verifier = deploy()
+    proof_verifier = SigmaProofVerifier[-1]
 
     # Create commitments
     l = 2
     commitments, r_0_commitment = create_commitments(n=2, l=l, generate_new=True)
 
     # Create a proof
-    proof = sp.generate_proof(commitments, 45, l, r_0_commitment)
+    proof = sp.generate_proof(commitments, 42, l, r_0_commitment)
     
-    # Test the hash function
+
+    # Verify the proof off-chain
+    print("Verifying proof off-chain...")
+    proof_valid, msg = sp.verify_proof(42, commitments, proof)
+    print("The proof is valid:", proof_valid)
+    print("Message:", msg)
+
+    # Verify the proof on chain
+    print("Verifying proof on-chain...")
+    # Generate commitment tuples
     commitments_tup = []
     for point in commitments:
         commitments_tup.append([point.x, point.y])
-    #nums = [ch.BigNum(123456789123456789).to_tuple(), ch.BigNum(987654321).to_tuple()]
 
-    # hash off-chain
-    hash = sp.hash_all(42, b'SomeMessage', commitments, proof.commitment)
-    print(f"Hash: {hex(hash)}")
-
-    # Hash on-chain
-    hash_on_chain = proof_verifier.hashAll(42, b'SomeMessage', commitments_tup, proof.to_tuple())
-    print(f"Hash on-chain: {hash_on_chain}")
-    
-
-    # # Verify the proof off-chain
-    # print("Verifying proof off-chain...")
-    # proof_valid, msg = sp.verify_proof(42, commitments, proof)
-    # print("The proof is valid:", proof_valid)
-    # print("Message:", msg)
-
-    # # Verify the proof on chain
-    # print("Verifying proof on-chain...")
-    # # Generate commitment tuples
-    # commitments_tup = []
-    # for point in commitments:
-    #     commitments_tup.append([point.x, point.y])
-
-    # result = proof_verifier.verify(commitments_tup, proof.to_tuple())
-    # print(f"Verification result: {result}")
+    result = proof_verifier.verify(commitments_tup, proof.to_tuple())
+    print(f"Verification result: {result}")

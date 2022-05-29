@@ -120,7 +120,13 @@ contract SigmaProofVerifier {
         uint256 n = 2;
 
         // For now, hardcode the challenge
-        BigNum.instance memory x = BigNum._new(123456789);
+        //BigNum.instance memory x = BigNum._new(123456789);
+
+        // Compute the hash used for the challenge
+        uint256 xInt = uint256(hashAll(42, "Adrian", commitments, proof));
+        BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
+        x.val[0] = uint128(xInt & BigNum.LOWER_MASK);
+        x.val[1] = uint128(xInt >> 128);
 
         check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
         check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
@@ -151,20 +157,20 @@ contract SigmaProofVerifier {
             result = sha256(abi.encodePacked(result, proof.C_d[i].x, proof.C_d[i].y));
     }
 
-    function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {
-        // hash all the points
-        result = 0x00;
-        for (uint256 i = 0; i < points.length; i++)
-            result = sha256(abi.encodePacked(result, points[i].x, points[i].y));
+    // function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {
+    //     // hash all the points
+    //     result = 0x00;
+    //     for (uint256 i = 0; i < points.length; i++)
+    //         result = sha256(abi.encodePacked(result, points[i].x, points[i].y));
 
-        // hash all the numbers
-        for (uint256 i = 0; i < nums.length; i++) {
-            // hash all the cells individually
-            for (uint256 j = 0; j < nums[i].val.length; j++)
-                // nums[i].val[j] is a uint128 not a uint256 --> encide as bytes16
-                result = sha256(abi.encodePacked(result, nums[i].val[j]));
-            // nums[i].neg is a bool not a uint256 --> encode as bytes1
-            result = sha256(abi.encodePacked(result, nums[i].neg));
-        }
-    }
+    //     // hash all the numbers
+    //     for (uint256 i = 0; i < nums.length; i++) {
+    //         // hash all the cells individually
+    //         for (uint256 j = 0; j < nums[i].val.length; j++)
+    //             // nums[i].val[j] is a uint128 not a uint256 --> encide as bytes16
+    //             result = sha256(abi.encodePacked(result, nums[i].val[j]));
+    //         // nums[i].neg is a bool not a uint256 --> encode as bytes1
+    //         result = sha256(abi.encodePacked(result, nums[i].neg));
+    //     }
+    // }
 }

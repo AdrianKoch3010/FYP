@@ -93,21 +93,24 @@ def test_hash(points, nums):
     
     return int.from_bytes(result, byteorder='big')
 
+# hash all the given information together to create a random oracle
+# The hash must inlcude some public information
+# The hash must be deterministic
 # The message is a byte string
-def hash_all(S: int, M: str, C: list, a: SigmaProof.Commitment) -> int:
+def hash_all(serial_number: int, message: str, commitments: list, proof: SigmaProof.Commitment) -> int:
     # hash the serial number
-    result = SHA256.new(convert.to_bytes(S)).digest()
+    result = SHA256.new(convert.to_bytes(serial_number)).digest()
 
     # hash the message
-    result = SHA256.new(result + M).digest()
+    result = SHA256.new(result + message).digest()
 
     # concatenate all the points
     points = [ch.G, ch.H]
-    points += C
-    points += a.Cl
-    points += a.Ca
-    points += a.Cb
-    points += a.Cd
+    points += commitments
+    points += proof.Cl
+    points += proof.Ca
+    points += proof.Cb
+    points += proof.Cd
 
     # hash all the points
     for point in points:
@@ -118,40 +121,9 @@ def hash_all(S: int, M: str, C: list, a: SigmaProof.Commitment) -> int:
 
     return int.from_bytes(result, byteorder='big')
 
-# # hash all the given information together to create a random oracle
-# # The hash must inlcude some public information
-# # The hash must be deterministic
-# def hash_all(M: str, S: int, C: list, a: SigmaProof.Commitment) -> int:
-#     # hash the ECC points used in the commitment
-#     h = SHA256.new(ch.G.x.to_bytes())
-#     h.update(ch.G.y.to_bytes())
-#     h.update(ch.H.x.to_bytes())
-#     h.update(ch.H.y.to_bytes())
 
-#     # hash the transaction string
-#     h.update(bytes(M, 'utf-8'))
-#     # hash the coin serial number
-#     h.update(str(S).encode())
-
-#     # hash the coin commitments
-#     for comm in C:
-#         h.update(comm.x.to_bytes())
-#         h.update(comm.y.to_bytes())
-
-#     # hash step one of the proof
-#     assert len(a.Cl) == len(a.Ca) and len(a.Cl) == len(a.Cb) and len(a.Cl) == len(a.Cd)
-#     for i in range(len(a.Cl)):
-#         h.update(str(a.Cl[i]).encode())
-#         h.update(str(a.Ca[i]).encode())
-#         h.update(str(a.Cb[i]).encode())
-#         h.update(str(a.Cd[i]).encode())
-
-#     return int.from_bytes(h.digest(), byteorder='big')
-
-
-# C is the list of commitments
-# l is the index of the commitment to generate the proof for
-# r is the secret blinding factor used in c_l = commit(S, r)
+# l is the index of the commitment (to 0) to generate the proof for
+# r_0_commitment is the secret blinding factor used in c_l = commit(S, r)
 def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment: int) -> SigmaProof:
     generate_new = True
 
@@ -201,11 +173,7 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
         Cd.append(cd)
 
     # Generate x as a random oracle
-    #x = hash_all('Adrian', serial_number, commitments, SigmaProof.Commitment(Cl, Ca, Cb, Cd))
-    
-    # For now, hardcode x
-    x = 123456789
-    
+    x = hash_all(serial_number, b'Adrian', commitments, SigmaProof.Commitment(Cl, Ca, Cb, Cd))
     print('x:', x)
 
 
@@ -229,17 +197,14 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     sigma_proof = SigmaProof(SigmaProof.Commitment(Cl, Ca, Cb, Cd), x, sigma_response)
     return sigma_proof
 
-def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, str]:
+def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tuple[bool, str]:
 
     N = len(commitments)
     n = math.ceil(math.log(N, 2))
     assert N == 2**n, "N must be a power of 2"
 
     # Compute the challenge
-    #challenge = hash_all('Adrian', S, commitments, proof.commitment)
-
-    # For now, hardcode the challenge
-    challenge = 123456789
+    challenge = hash_all(serial_number, b'Adrian', commitments, proof.commitment)
 
     # Check that the challenge is correct
     # This is not stricly necessary, but it helps to prevent unnecessary computation

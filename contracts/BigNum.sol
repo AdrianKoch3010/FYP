@@ -10,7 +10,7 @@ library BigNum {
         bool neg;
     }
 
-    uint256 constant LOWER_MASK = 2**128 - 1;
+    uint256 constant public LOWER_MASK = 2**128 - 1;
 
     function _new(int128 num) internal pure returns (instance memory) {
         instance memory ret;
