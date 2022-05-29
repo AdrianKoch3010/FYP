@@ -93,10 +93,13 @@ def test_hash(points, nums):
     
     return int.from_bytes(result, byteorder='big')
 
-def hash_all(M: str, S: int, C: list, a: SigmaProof.Commitment) -> int:
+# The message is a byte string
+def hash_all(S: int, M: str, C: list, a: SigmaProof.Commitment) -> int:
+    # hash the serial number
     result = SHA256.new(convert.to_bytes(S)).digest()
 
-    # ignore the string for now
+    # hash the message
+    result = SHA256.new(result + M).digest()
 
     # concatenate all the points
     points = [ch.G, ch.H]

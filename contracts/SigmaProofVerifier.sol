@@ -127,45 +127,28 @@ contract SigmaProofVerifier {
         check3 = verifyProofCheck3(n, x, commitments, proof);
     }
 
-    function hashAll(uint256 serialNumber, ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bytes32 result) {
+    function hashAll(uint256 serialNumber, bytes memory message,  ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bytes32 result) {
         // Hash the serial number
         result = sha256(abi.encodePacked(serialNumber));
 
-        // Concatenate all the commitment / points together
-        uint256 numberOfPoints = 
-            2
-            + commitments.length 
-            + proof.C_l.length 
-            + proof.C_a.length 
-            + proof.C_b.length 
-            + proof.C_d.length;
-        ECC.Point[] memory points = new ECC.Point[](numberOfPoints);
+        // Hash the message
+        result = sha256(abi.encodePacked(result, message));
 
-        points[0] = ECC.G();
-        points[1] = ECC.H();
-        uint256 startIdx = 2;
+        // Hash the ECC curve generator points
+        result = sha256(abi.encodePacked(result, ECC.G().x, ECC.G().y));
+        result = sha256(abi.encodePacked(result, ECC.H().x, ECC.H().y));
+
+        // Hash the commitments
         for (uint256 i = 0; i < commitments.length; i++)
-            points[i + startIdx] = commitments[i];
-        startIdx += commitments.length;
-
+            result = sha256(abi.encodePacked(result, commitments[i].x, commitments[i].y));
         for (uint256 i = 0; i < proof.C_l.length; i++)
-            points[i + startIdx] = proof.C_l[i];
-        startIdx += proof.C_l.length;
-
+            result = sha256(abi.encodePacked(result, proof.C_l[i].x, proof.C_l[i].y));
         for (uint256 i = 0; i < proof.C_a.length; i++)
-            points[i + startIdx] = proof.C_a[i];
-        startIdx += proof.C_a.length;
-
+            result = sha256(abi.encodePacked(result, proof.C_a[i].x, proof.C_a[i].y));
         for (uint256 i = 0; i < proof.C_b.length; i++)
-            points[i + startIdx] = proof.C_b[i];
-        startIdx += proof.C_b.length;
-
+            result = sha256(abi.encodePacked(result, proof.C_b[i].x, proof.C_b[i].y));
         for (uint256 i = 0; i < proof.C_d.length; i++)
-            points[i + startIdx] = proof.C_d[i];
-
-        // Hash all the points together
-        for (uint256 i = 0; i < points.length; i++)
-            result = sha256(abi.encodePacked(result, points[i].x, points[i].y));
+            result = sha256(abi.encodePacked(result, proof.C_d[i].x, proof.C_d[i].y));
     }
 
     function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {

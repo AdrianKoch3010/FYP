@@ -45,7 +45,7 @@ def main():
 
     # Create commitments
     l = 2
-    commitments, r_0_commitment = create_commitments(n=2, l=l, generate_new=False)
+    commitments, r_0_commitment = create_commitments(n=2, l=l, generate_new=True)
 
     # Create a proof
     proof = sp.generate_proof(commitments, 45, l, r_0_commitment)
@@ -57,11 +57,11 @@ def main():
     #nums = [ch.BigNum(123456789123456789).to_tuple(), ch.BigNum(987654321).to_tuple()]
 
     # hash off-chain
-    hash = sp.hash_all("Some message", 42, commitments, proof.commitment)
+    hash = sp.hash_all(42, b'SomeMessage', commitments, proof.commitment)
     print(f"Hash: {hex(hash)}")
 
     # Hash on-chain
-    hash_on_chain = proof_verifier.hashAll(42, commitments_tup, proof.to_tuple())
+    hash_on_chain = proof_verifier.hashAll(42, b'SomeMessage', commitments_tup, proof.to_tuple())
     print(f"Hash on-chain: {hash_on_chain}")
     
 
