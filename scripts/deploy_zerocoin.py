@@ -38,23 +38,23 @@ def create_commitments(n: int, l: int, generate_new = True):
 
 def main():
     # Deploy the contract
-    #proof_verifier = deploy()
-    proof_verifier = SigmaProofVerifier[-1]
+    proof_verifier = deploy()
+    #proof_verifier = SigmaProofVerifier[-1]
 
     # Create commitments
     n = 4
-    l = 7
+    l = 4
     commitments, r_0_commitment = create_commitments(n, l, generate_new=True)
 
     # Create a proof
     proof = sp.generate_proof(commitments, 42, l, r_0_commitment)
     
 
-    # Verify the proof off-chain
-    print("Verifying proof off-chain...")
-    proof_valid, msg = sp.verify_proof(42, commitments, proof)
-    print("The proof is valid:", proof_valid)
-    print("Message:", msg)
+    # # Verify the proof off-chain
+    # print("Verifying proof off-chain...")
+    # proof_valid, msg = sp.verify_proof(42, commitments, proof)
+    # print("The proof is valid:", proof_valid)
+    # print("Message:", msg)
 
     # Verify the proof on chain
     print("Verifying proof on-chain...")
@@ -65,3 +65,6 @@ def main():
 
     result = proof_verifier.verify(commitments_tup, n, proof.to_tuple())
     print(f"Verification result: {result}")
+
+    # result = proof_verifier.verify.transact(commitments_tup, n, proof.to_tuple(), {'from': hf.get_account(), 'gas_limit': 30000000})
+    # print(f"Verification result: {result.info()}")

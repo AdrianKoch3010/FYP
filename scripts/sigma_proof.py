@@ -67,32 +67,6 @@ class SigmaProof:
         tup.append(ch.BigNum(self.response.zd).to_tuple())
         return tup
 
-def test_hash(points, nums):
-    h = SHA256.new()
-    
-    # result is a byte string of 32 0
-    result = bytes(32)
-
-    # hash all the ECC points
-    for point in points:
-        encoded_bytes = result
-        encoded_bytes += convert.to_bytes(int(point.x))
-        encoded_bytes += convert.to_bytes(int(point.y))
-        result = SHA256.new(encoded_bytes).digest()
-
-    # hash all the integers
-    for n in nums:
-        big_num = ch.BigNum(n)
-        for cell in big_num.val:
-            encoded_bytes = result
-            encoded_bytes += convert.to_bytes(int(cell), type_str='bytes16')
-            result = SHA256.new(encoded_bytes).digest()
-        encoded_bytes = result
-        encoded_bytes += convert.to_bytes(int(big_num.neg), type_str='bytes1')
-        result = SHA256.new(encoded_bytes).digest()
-    
-    return int.from_bytes(result, byteorder='big')
-
 # hash all the given information together to create a random oracle
 # The hash must inlcude some public information
 # The hash must be deterministic
@@ -143,11 +117,11 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     Cd = []
 
     for j in range(n):
-        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 3456712131321233999999
-        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 354315123132132999999999
-        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 3544854894513229999999
-        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 3456848423123132999999
-        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373745132123132999999
+        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 34567121313212339
+        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 354315123132132999
+        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 35448548945132299
+        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 34568484231231329
+        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373745132123132
         R.append(r)
         A.append(a)
         S.append(s)
@@ -279,3 +253,29 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
         return True, "Proof is valid"
     else:
         return False, error_string
+
+# def test_hash(points, nums):
+#     h = SHA256.new()
+    
+#     # result is a byte string of 32 0
+#     result = bytes(32)
+
+#     # hash all the ECC points
+#     for point in points:
+#         encoded_bytes = result
+#         encoded_bytes += convert.to_bytes(int(point.x))
+#         encoded_bytes += convert.to_bytes(int(point.y))
+#         result = SHA256.new(encoded_bytes).digest()
+
+#     # hash all the integers
+#     for n in nums:
+#         big_num = ch.BigNum(n)
+#         for cell in big_num.val:
+#             encoded_bytes = result
+#             encoded_bytes += convert.to_bytes(int(cell), type_str='bytes16')
+#             result = SHA256.new(encoded_bytes).digest()
+#         encoded_bytes = result
+#         encoded_bytes += convert.to_bytes(int(big_num.neg), type_str='bytes1')
+#         result = SHA256.new(encoded_bytes).digest()
+    
+#     return int.from_bytes(result, byteorder='big')
