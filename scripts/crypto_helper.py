@@ -44,7 +44,7 @@ def pad_commitments(C):
     if N == n:
         return C, n, N
     else:
-        return C + [ECC_commit(0, 0)] * (N - n), n, N # this creates a new list
+        return C + [ECC_commit(42, 42)] * (N - n), n, N # this creates a new list
 
 # calculates the number of bytes needed to represent the integer n
 def bytes_needed(n: int) -> int:

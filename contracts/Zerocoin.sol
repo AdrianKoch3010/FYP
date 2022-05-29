@@ -12,8 +12,9 @@ contract Zerocoin {
         logCounter = 1;
 
         // The list of coins must have a minimum size of 2
-        coins.push(ECC.Point(0, 0));
-        coins.push(ECC.Point(0, 0));
+        // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
+        coins.push(ECC.commit(42, 42));
+        coins.push(ECC.commit(42, 42));
     }
 
     // The list of commitments to (S, r) i.e. the list of coins
@@ -47,7 +48,8 @@ contract Zerocoin {
 
             // Ensure the list has length of a power of 2 (fill up with zeros)
             while (coins.length & (coins.length - 1) != 0)
-                coins.push(ECC.Point(0, 0));
+                // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
+                coins.push(ECC.commit(42, 42));
 
             logCounter++;
         }
@@ -89,6 +91,8 @@ contract Zerocoin {
         lastIdx = 0;
         logCounter = 0;
         delete coins;
+        coins.push(ECC.commit(42, 42));
+        coins.push(ECC.commit(42, 42));
         delete spentSerialNumbers;
     }
 }

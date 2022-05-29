@@ -55,9 +55,10 @@ def create_commitments(n: int, l: int, generate_new = True):
 
 def mint_coin(zerocoin_contract):
     coin = Coin()
-    index = zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
-    print(f"Minted coin {coin.serial_number} at index {index.return_value}")
-    coin.position_in_coins = int(index.return_value)
+    zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
+    index = zerocoin_contract.mint.call([coin.commitment.x, coin.commitment.y])
+    print(f"Minted coin {coin.serial_number} at index {index}")
+    coin.position_in_coins = int(index)
     return coin
 
 def spend_coin(zerocoin_contract, coin: Coin):
@@ -85,13 +86,14 @@ def spend_coin(zerocoin_contract, coin: Coin):
 
 def main():
     # Deploy the contract
-    proof_verifier = deploy()
+    #zerocoin = deploy()
+    zerocoin = Zerocoin[-1]
 
     # Mint a coin
-    coin = mint_coin(proof_verifier)
+    coin = mint_coin(zerocoin)
 
     # Spend the coin
-    spend_coin(proof_verifier, coin)
+    spend_coin(zerocoin, coin)
 
 # def main():
 #     # Deploy the contract

@@ -99,7 +99,7 @@ def hash_all(serial_number: int, message: str, commitments: list, proof: SigmaPr
 # l is the index of the commitment (to 0) to generate the proof for
 # r_0_commitment is the secret blinding factor used in c_l = commit(S, r)
 def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment: int) -> SigmaProof:
-    generate_new = True
+    generate_new = False
 
     N = len(commitments)
     n = math.ceil(math.log(N, 2))
