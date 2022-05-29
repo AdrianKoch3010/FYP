@@ -80,8 +80,8 @@ contract SigmaProofVerifier {
         ECC.Point memory left;
         ECC.Point memory right;
         
-        uint256 N = 2**n;
-        //uint256 N = 4;
+        // N = 2**n
+        uint256 N = commitments.length;
 
         ECC.Point memory leftSum = ECC.pointAtInf();
         BigNum.instance memory product;
@@ -114,26 +114,12 @@ contract SigmaProofVerifier {
         check = ECC.isEqual(left, right);
     }
 
-    function verify(ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bool check1, bool check2, bool check3) {
-        
-        // For now, hardcode the length of the commitment list
-        uint256 n = 2;
-
-        // For now, hardcode the challenge
-        //BigNum.instance memory x = BigNum._new(123456789);
-
-        // Compute the hash used for the challenge
-        uint256 xInt = uint256(hashAll(42, "Adrian", commitments, proof));
-        BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
-        x.val[0] = uint128(xInt & BigNum.LOWER_MASK);
-        x.val[1] = uint128(xInt >> 128);
-
-        check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
-        check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
-        check3 = verifyProofCheck3(n, x, commitments, proof);
-    }
-
-    function hashAll(uint256 serialNumber, bytes memory message,  ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bytes32 result) {
+    function hashAll(
+        uint256 serialNumber,
+        bytes memory message,
+        ECC.Point[] memory commitments,
+        SigmaProof memory proof)
+    internal pure returns (bytes32 result) {
         // Hash the serial number
         result = sha256(abi.encodePacked(serialNumber));
 
@@ -156,6 +142,23 @@ contract SigmaProofVerifier {
         for (uint256 i = 0; i < proof.C_d.length; i++)
             result = sha256(abi.encodePacked(result, proof.C_d[i].x, proof.C_d[i].y));
     }
+
+    function verify(
+        ECC.Point[] memory commitments,
+        uint256 n,
+        SigmaProof memory proof)
+    public pure returns (bool check1, bool check2, bool check3) {
+        // Compute the hash used for the challenge
+        uint256 xInt = uint256(hashAll(42, "Adrian", commitments, proof));
+        BigNum.instance memory x = BigNum.instance(new uint128[](2), false);
+        x.val[0] = uint128(xInt & BigNum.LOWER_MASK);
+        x.val[1] = uint128(xInt >> 128);
+
+        check1 = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
+        check2 = verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
+        check3 = verifyProofCheck3(n, x, commitments, proof);
+    }
+
 
     // function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {
     //     // hash all the points

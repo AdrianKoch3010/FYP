@@ -20,8 +20,6 @@ def create_commitments(n: int, l: int, generate_new = True):
     # Create a list of commitments, one of which is a commitment to 0
     #generate_new = True
     commitments = []
-    l = 2
-    n = 2
     N = 2**n
     r_0_commitment = 0
     assert l < N, "l must be less than N"
@@ -44,8 +42,9 @@ def main():
     proof_verifier = SigmaProofVerifier[-1]
 
     # Create commitments
-    l = 2
-    commitments, r_0_commitment = create_commitments(n=2, l=l, generate_new=True)
+    n = 4
+    l = 7
+    commitments, r_0_commitment = create_commitments(n, l, generate_new=True)
 
     # Create a proof
     proof = sp.generate_proof(commitments, 42, l, r_0_commitment)
@@ -64,5 +63,5 @@ def main():
     for point in commitments:
         commitments_tup.append([point.x, point.y])
 
-    result = proof_verifier.verify(commitments_tup, proof.to_tuple())
+    result = proof_verifier.verify(commitments_tup, n, proof.to_tuple())
     print(f"Verification result: {result}")
