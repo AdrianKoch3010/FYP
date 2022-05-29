@@ -1,4 +1,6 @@
 # from Crypto.Random import random
+from brownie import convert
+from Crypto.PublicKey import ECC
 from scripts import crypto_helper as ch
 from Crypto.Hash import SHA256
 from Crypto.Random import random
@@ -63,8 +65,64 @@ class SigmaProof:
         tup.append(ch.BigNum(self.response.zd).to_tuple())
         return tup
 
+def test_hash(points, nums):
+    h = SHA256.new()
+    
+    # result is a byte string of 32 0
+    result = bytes(32)
 
+    # hash all the ECC points
+    for point in points:
+        encoded_bytes = result
+        encoded_bytes += convert.to_bytes(int(point.x))
+        encoded_bytes += convert.to_bytes(int(point.y))
+        result = SHA256.new(encoded_bytes).digest()
 
+    # hash all the integers
+    for n in nums:
+        big_num = ch.BigNum(n)
+        for cell in big_num.val:
+            encoded_bytes = result
+            encoded_bytes += convert.to_bytes(int(cell), type_str='bytes16')
+            result = SHA256.new(encoded_bytes).digest()
+        encoded_bytes = result
+        encoded_bytes += convert.to_bytes(int(big_num.neg), type_str='bytes1')
+        result = SHA256.new(encoded_bytes).digest()
+    
+    return int.from_bytes(result, byteorder='big')
+
+    # # hash the point
+    # h.update(int(point.x).to_bytes(32, byteorder='little'))
+    # h.update(int(point.y).to_bytes(32, byteorder='little'))
+
+    # big_num = ch.BigNum(num)
+    # for val in big_num.val:
+    #     h.update(val.to_bytes(32, byteorder='little'))
+    # h.update(int(big_num.neg).to_bytes(32, byteorder='little'))
+
+    h.update(convert.to_bytes(int(point.x)))
+    encoded_bytes += convert.to_bytes(int(point.x))
+    print(hex(int.from_bytes(convert.to_bytes(int(point.x)), byteorder='big')))
+    h.update(convert.to_bytes(int(point.y)))
+    encoded_bytes += convert.to_bytes(int(point.y))
+    print(hex(int(point.y)))
+
+    big_num = ch.BigNum(num)
+    for val in big_num.val:
+        h.update(convert.to_bytes(int(val)))
+        encoded_bytes += convert.to_bytes(int(val))
+        print(hex(int(val)))
+    h.update(convert.to_bytes(int(big_num.neg)))
+    encoded_bytes += convert.to_bytes(int(big_num.neg))
+    print(hex(int(big_num.neg)))
+
+    #print(hex(int.from_bytes(encoded_bytes, byteorder='big')))
+
+    byte_string = b''.join([i.to_bytes(1, byteorder='big') for i in encoded_bytes])
+    #print(type(byte_string))
+    #print(byte_string)
+    hash = SHA256.new(byte_string)
+    return int.from_bytes(hash.digest(), 'big')
 
 # hash all the given information together to create a random oracle
 # The hash must inlcude some public information
