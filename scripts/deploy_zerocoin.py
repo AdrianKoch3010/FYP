@@ -46,23 +46,23 @@ def main():
     # Create commitments
     l = 2
     commitments, r_0_commitment = create_commitments(n=2, l=l, generate_new=False)
+
+    # Create a proof
+    proof = sp.generate_proof(commitments, 45, l, r_0_commitment)
     
     # Test the hash function
-    comms = []
-    for i in range(4):
-        comms.append([commitments[i].x, commitments[i].y])
-    nums = [ch.BigNum(123456789123456789).to_tuple(), ch.BigNum(987654321).to_tuple()]
+    commitments_tup = []
+    for point in commitments:
+        commitments_tup.append([point.x, point.y])
+    #nums = [ch.BigNum(123456789123456789).to_tuple(), ch.BigNum(987654321).to_tuple()]
 
     # hash off-chain
-    hash = sp.test_hash(commitments[:4], [123456789123456789, 987654321])
+    hash = sp.hash_all("Some message", 42, commitments, proof.commitment)
     print(f"Hash: {hex(hash)}")
 
     # Hash on-chain
-    hash_on_chain = proof_verifier.testHash(comms, nums)
+    hash_on_chain = proof_verifier.hashAll(42, commitments_tup, proof.to_tuple())
     print(f"Hash on-chain: {hash_on_chain}")
-
-    # Create a proof
-    # proof = sp.generate_proof(commitments, 45, l, r_0_commitment)
     
 
     # # Verify the proof off-chain

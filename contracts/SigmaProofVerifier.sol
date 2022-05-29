@@ -127,6 +127,47 @@ contract SigmaProofVerifier {
         check3 = verifyProofCheck3(n, x, commitments, proof);
     }
 
+    function hashAll(uint256 serialNumber, ECC.Point[] memory commitments, SigmaProof memory proof) public pure returns (bytes32 result) {
+        // Hash the serial number
+        result = sha256(abi.encodePacked(serialNumber));
+
+        // Concatenate all the commitment / points together
+        uint256 numberOfPoints = 
+            2
+            + commitments.length 
+            + proof.C_l.length 
+            + proof.C_a.length 
+            + proof.C_b.length 
+            + proof.C_d.length;
+        ECC.Point[] memory points = new ECC.Point[](numberOfPoints);
+
+        points[0] = ECC.G();
+        points[1] = ECC.H();
+        uint256 startIdx = 2;
+        for (uint256 i = 0; i < commitments.length; i++)
+            points[i + startIdx] = commitments[i];
+        startIdx += commitments.length;
+
+        for (uint256 i = 0; i < proof.C_l.length; i++)
+            points[i + startIdx] = proof.C_l[i];
+        startIdx += proof.C_l.length;
+
+        for (uint256 i = 0; i < proof.C_a.length; i++)
+            points[i + startIdx] = proof.C_a[i];
+        startIdx += proof.C_a.length;
+
+        for (uint256 i = 0; i < proof.C_b.length; i++)
+            points[i + startIdx] = proof.C_b[i];
+        startIdx += proof.C_b.length;
+
+        for (uint256 i = 0; i < proof.C_d.length; i++)
+            points[i + startIdx] = proof.C_d[i];
+
+        // Hash all the points together
+        for (uint256 i = 0; i < points.length; i++)
+            result = sha256(abi.encodePacked(result, points[i].x, points[i].y));
+    }
+
     function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {
         // hash all the points
         result = 0x00;
