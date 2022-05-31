@@ -64,16 +64,17 @@ contract Zerocoin {
         bool isSpent = false;
         for (uint256 i = 0; i < spentSerialNumbers.length && !isSpent; i++)
             isSpent = isSpent || (spentSerialNumbers[i] == serialNumber);
-        require(!isSpent, "The serial number has already been spent");
+        require(!isSpent, "The coin with this serial number has already been spent");
 
         // Homorphically substract the serial number from the coins
-        // ECC.Point[] memory commitments = new ECC.Point[](coins.length);
-        // for (uint256 i = 0; i < coins.length; i++)
-        //     commitments[i] = ECC.sub(coins[i], ECC.mul(int256(serialNumber), ECC.G()));
+        ECC.Point[] memory commitments = new ECC.Point[](coins.length);
+        for (uint256 i = 0; i < coins.length; i++)
+            commitments[i] = ECC.sub(coins[i], ECC.mul(int256(serialNumber), ECC.G()));
+            //commitments[i] = ECC.add(coins[i], ECC.inv(ECC.mul(int256(serialNumber), ECC.G())));
         
         // Check the proof
-        // success = SigmaProofVerifier.verify(commitments, logCounter, proof);
-        success = SigmaProofVerifier.verify(serialNumber, coins, logCounter, proof);
+        success = SigmaProofVerifier.verify(serialNumber, commitments, logCounter, proof);
+        //success = SigmaProofVerifier.verify(serialNumber, coins, logCounter, proof);
         require(success, "The proof is invalid");
 
         // Mark the coin as spent

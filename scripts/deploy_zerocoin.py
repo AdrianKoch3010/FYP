@@ -17,8 +17,8 @@ class Coin:
     def mint(self):
         blinding_factor = random.randint(2, ch.p-2)
         # // 4 --> make sure S does not flip to negative when converting to signed int256
-        #serial_number = random.randint(2, ch.p // 4)
-        serial_number = 0
+        serial_number = random.randint(2, ch.p // 4)
+        #serial_number = 0
         commitment = ch.ECC_commit(serial_number, blinding_factor)
         self.blinding_factor = blinding_factor
         self.serial_number = serial_number
@@ -55,8 +55,10 @@ def create_commitments(n: int, l: int, generate_new = True):
 
 def mint_coin(zerocoin_contract):
     coin = Coin()
-    zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
+    # When calling the function, the state of the blockchain is not altered, just returns the index
     index = zerocoin_contract.mint.call([coin.commitment.x, coin.commitment.y])
+    # When the mint function is called as a transaction, the state of the blockchain is altered
+    zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
     print(f"Minted coin {coin.serial_number} at index {index}")
     coin.position_in_coins = int(index)
     return coin
@@ -72,12 +74,12 @@ def spend_coin(zerocoin_contract, coin: Coin):
         print(f'Coin: {c.x} {c.y}')
 
     # Homomorphically subtract the serial number from the coin commitments
-    # commitments = []
-    # for comm in C_padded:
-    #     commitments.append(comm + -ch.ECC_commit(coin.serial_number, 0))
+    commitments = []
+    for comm in coins:
+        commitments.append(comm + -ch.ECC_commit(coin.serial_number, 0))
 
     # proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
-    proof = sp.generate_proof(coins, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
+    proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     print(f"Generated proof for spending coin {coin.serial_number}")
 
     tx = zerocoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
@@ -86,14 +88,16 @@ def spend_coin(zerocoin_contract, coin: Coin):
 
 def main():
     # Deploy the contract
-    #zerocoin = deploy()
-    zerocoin = Zerocoin[-1]
+    zerocoin = deploy()
+    #zerocoin = Zerocoin[-1]
 
     # Mint a coin
-    coin = mint_coin(zerocoin)
+    coin1 = mint_coin(zerocoin)
+    coin2 = mint_coin(zerocoin)
 
-    # Spend the coin
-    spend_coin(zerocoin, coin)
+    # Spend the coins in reverse order
+    spend_coin(zerocoin, coin2)
+    spend_coin(zerocoin, coin1)
 
 # def main():
 #     # Deploy the contract
