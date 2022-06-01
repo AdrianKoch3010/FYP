@@ -1,11 +1,11 @@
-// contracts/Zerocoin.sol
+// contracts/ECCZerocoin.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
-import "./SigmaProofVerifier.sol";
+import "./ECCSigmaProofVerifier.sol";
 
-contract Zerocoin {
+contract ECCZerocoin {
     // Constructor
     constructor() {
         lastIdx = 0;
@@ -13,13 +13,13 @@ contract Zerocoin {
 
         // The list of coins must have a minimum size of 2
         // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
+        coins.push(ECC.commit(42, 42));
+        coins.push(ECC.commit(42, 42));
     }
 
     // The list of commitments to (S, r) i.e. the list of coins
     // The length of this list must be a power of 2 at all times
-    uint256[] coins;
+    ECC.Point[] coins;
 
     // The index of the last coin in the list
     uint256 lastIdx;
@@ -34,7 +34,7 @@ contract Zerocoin {
     // The mint function adds a commitment to the list of coins and returns its index
     // TODO: Minting should require burning some ERC20 token
     // It then ensures the list has length of a power of 2
-    function mint(uint256 commitment) public returns(uint256 index) {
+    function mint(ECC.Point memory commitment) public returns(uint256 index) {
         index = lastIdx;
         
         // If the list is already long enough, assign the commitment to the next index
@@ -49,7 +49,7 @@ contract Zerocoin {
             // Ensure the list has length of a power of 2 (fill up with zeros)
             while (coins.length & (coins.length - 1) != 0)
                 // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
-                coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
+                coins.push(ECC.commit(42, 42));
 
             logCounter++;
         }
@@ -59,7 +59,7 @@ contract Zerocoin {
     // The spend function verifies the provided proof and marks the coin as spent
     // If successful, it transacts the ERC20 token to the caller
     // If the proof is invalid, the spend fails and the transaction is reverted
-    function spend(uint256 serialNumber, SigmaProofVerifier.Proof memory proof) public returns(bool success) {
+    function spend(uint256 serialNumber, ECCSigmaProofVerifier.Proof memory proof) public returns(bool success) {
         // Check that the serial number has not been spent yet
         bool isSpent = false;
         for (uint256 i = 0; i < spentSerialNumbers.length && !isSpent; i++)
@@ -67,17 +67,13 @@ contract Zerocoin {
         require(!isSpent, "The coin with this serial number has already been spent");
 
         // Homorphically substract the serial number from the coins
-        uint256[] memory commitments = new uint256[](coins.length);
-        BigNum.instance memory serialNumberNeg = BigNum.instance(new uint128[](2), true);
-        serialNumberNeg.val[0] = uint128(serialNumber & BigNum.LOWER_MASK);
-        serialNumberNeg.val[1] = uint128(serialNumber >> 128);
-        uint256 negExpSerialNumber = BigNum.modExp(SigmaProofVerifier.G, serialNumberNeg);
+        ECC.Point[] memory commitments = new ECC.Point[](coins.length);
         for (uint256 i = 0; i < coins.length; i++)
-            commitments[i] = mulmod(coins[i], negExpSerialNumber, BigNum.PRIME);
+            commitments[i] = ECC.sub(coins[i], ECC.mul(int256(serialNumber), ECC.G()));
             //commitments[i] = ECC.add(coins[i], ECC.inv(ECC.mul(int256(serialNumber), ECC.G())));
         
         // Check the proof
-        success = SigmaProofVerifier.verify(serialNumber, commitments, logCounter, proof);
+        success = ECCSigmaProofVerifier.verify(serialNumber, commitments, logCounter, proof);
         //success = SigmaProofVerifier.verify(serialNumber, coins, logCounter, proof);
         require(success, "The proof is invalid");
 
@@ -85,7 +81,7 @@ contract Zerocoin {
         spentSerialNumbers.push(serialNumber);
     }
 
-    function getCoins() public view returns(uint256[] memory) {
+    function getCoins() public view returns(ECC.Point[] memory) {
         return coins;
     }
 
@@ -96,8 +92,8 @@ contract Zerocoin {
         lastIdx = 0;
         logCounter = 0;
         delete coins;
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
+        coins.push(ECC.commit(42, 42));
+        coins.push(ECC.commit(42, 42));
         delete spentSerialNumbers;
     }
 }

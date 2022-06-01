@@ -29,6 +29,19 @@ class SigmaProof:
             self.zd = zd
     
     def to_tuple(self):
+        Cl_tup = []
+        Ca_tup = []
+        Cb_tup = []
+        Cd_tup = []
+        # check that Cl, Ca, Cb, Cd are the same length
+        assert len(self.commitment.Cl) == len(self.commitment.Ca) == len(self.commitment.Cb) == len(self.commitment.Cd)
+        for i in range(len(self.commitment.Cl)):
+            Cl_tup.append([self.commitment.Cl[i].x, self.commitment.Cl[i].y])
+            Ca_tup.append([self.commitment.Ca[i].x, self.commitment.Ca[i].y])
+            Cb_tup.append([self.commitment.Cb[i].x, self.commitment.Cb[i].y])
+            Cd_tup.append([self.commitment.Cd[i].x, self.commitment.Cd[i].y])
+            
+            
         # F, Za, Zb, zd must be converted to big numbers
         F_tup = []
         Za_tup = []
@@ -42,10 +55,10 @@ class SigmaProof:
 
         # Assemble the final tuple
         tup = []
-        tup.append(self.commitment.Cl)
-        tup.append(self.commitment.Ca)
-        tup.append(self.commitment.Cb)
-        tup.append(self.commitment.Cd)
+        tup.append(Cl_tup)
+        tup.append(Ca_tup)
+        tup.append(Cb_tup)
+        tup.append(Cd_tup)
         tup.append(F_tup)
         tup.append(Za_tup)
         tup.append(Zb_tup)
@@ -64,7 +77,7 @@ def hash_all(serial_number: int, message: str, commitments: list, proof: SigmaPr
     result = SHA256.new(result + message).digest()
 
     # concatenate all the points
-    points = [ch.g, ch.h]
+    points = [ch.G, ch.H]
     points += commitments
     points += proof.Cl
     points += proof.Ca
@@ -73,10 +86,12 @@ def hash_all(serial_number: int, message: str, commitments: list, proof: SigmaPr
 
     # hash all the points
     for point in points:
-        result = SHA256.new(result + convert.to_bytes(point)).digest()
+        encoded_bytes = result
+        encoded_bytes += convert.to_bytes(int(point.x))
+        encoded_bytes += convert.to_bytes(int(point.y))
+        result = SHA256.new(encoded_bytes).digest()
 
     return int.from_bytes(result, byteorder='big')
-
 
 
 # l is the index of the commitment (to 0) to generate the proof for
@@ -113,9 +128,9 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
 
         l_j = l >> j & 1
         print('l_{j}:'.format(j = j), l_j)
-        Cl.append(ch.commit(l_j, r)) # commit to the jth bit of l
-        Ca.append(ch.commit(a, s))
-        Cb.append(ch.commit(l_j*a, t))
+        Cl.append(ch.ECC_commit(l_j, r)) # commit to the jth bit of l
+        Ca.append(ch.ECC_commit(a, s))
+        Cb.append(ch.ECC_commit(l_j*a, t))
 
 
     # The coefficients depend on the values of A
@@ -123,10 +138,10 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
 
     # Calculate Cd values
     for j in range(n):
-        cd = 1
+        cd = ch.G.point_at_infinity()
         for i in range(N):
-            cd = cd * pow(commitments[i], coeffs[i][j], ch.p) % ch.p
-        cd = cd * ch.commit(0, P[j]) % ch.p
+            cd += ch.ECC_mul(coeffs[i][j], commitments[i])
+        cd += ch.ECC_commit(0, P[j])
         Cd.append(cd)
 
     # Generate x as a random oracle
@@ -182,20 +197,22 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
     print('Checking commitments to l')
     check1 = True
     for j in range(n):
-        left = pow(Cl[j], x, ch.p) * Ca[j] % ch.p
-        right = ch.commit(F[j], Za[j])
+        # left = pow(Cl[j], x, p) * Ca[j] % p
+        left = ch.ECC_mul(x, Cl[j]) + Ca[j]
+        right = ch.ECC_commit(F[j], Za[j])
         print('Check 1.{j}: {true}'.format(j=j, true=left == right))
         check1 = check1 and (left == right)
 
     check2 = True
     for j in range(n):
-        left = pow(Cl[j], x-F[j]) * Cb[j] % ch.p
+        # left = pow(Cl[j], x-F[j], p) * Cb[j] % p
+        left = ch.ECC_mul(x-F[j], Cl[j]) + Cb[j]
         right = ch.ECC_commit(0, Zb[j])
         print('Check 2.{j}: {true}'.format(j=j, true=left == right))
         check2 = check2 and (left == right)
 
     print('Checking commitment to 0')
-    left_product = 1
+    left_sum = ch.G.point_at_infinity()
     for i in range(N):
         # Calculate the product of f_j,i_j
         product = 1
@@ -205,18 +222,20 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
                 product *= F[j]
             else:
                 product *= x - F[j]
-        left_product *= pow(commitments[i], product, ch.p) % ch.p
+        left_sum += ch.ECC_mul(product, commitments[i])
+
+    #print(f'left_sum: {left_sum.x}, {left_sum.y}')
 
     # Calculate the sum of the other commitments
-    right_product = 1
+    right_sum = ch.G.point_at_infinity()
     for k in range(n):
-        right_product *= pow(Cd[k], -pow(x, k)) % ch.p
+        right_sum += ch.ECC_mul(-pow(x, k), Cd[k])
 
 
     #print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
 
-    left = left_product * right_product % ch.p
-    right = ch.commit(0, zd)
+    left = left_sum + right_sum
+    right = ch.ECC_commit(0, zd)
     print('Check 3: {true}'.format(true=left == right))
     check3 = left == right
 
@@ -232,3 +251,29 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
         return True, "Proof is valid"
     else:
         return False, error_string
+
+# def test_hash(points, nums):
+#     h = SHA256.new()
+    
+#     # result is a byte string of 32 0
+#     result = bytes(32)
+
+#     # hash all the ECC points
+#     for point in points:
+#         encoded_bytes = result
+#         encoded_bytes += convert.to_bytes(int(point.x))
+#         encoded_bytes += convert.to_bytes(int(point.y))
+#         result = SHA256.new(encoded_bytes).digest()
+
+#     # hash all the integers
+#     for n in nums:
+#         big_num = ch.BigNum(n)
+#         for cell in big_num.val:
+#             encoded_bytes = result
+#             encoded_bytes += convert.to_bytes(int(cell), type_str='bytes16')
+#             result = SHA256.new(encoded_bytes).digest()
+#         encoded_bytes = result
+#         encoded_bytes += convert.to_bytes(int(big_num.neg), type_str='bytes1')
+#         result = SHA256.new(encoded_bytes).digest()
+    
+#     return int.from_bytes(result, byteorder='big')

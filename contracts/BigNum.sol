@@ -224,7 +224,7 @@ library BigNum {
         return true;
     }
 
-    // This function is taken from https://github.com/monicanagent/cypherpoker/issues/5
+    // This function is inspired by https://github.com/monicanagent/cypherpoker/issues/5
     // Note: exp values must be 255 or shorter, otherwise the loop counter overflows
     // -> This isn't an issue as the function is only called with exponents that are 128 bit max
     function modExp(uint256 base, uint256 exp) internal pure returns (uint256 result)  {

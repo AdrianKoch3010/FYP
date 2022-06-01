@@ -1,8 +1,9 @@
 from eth_utils import to_tuple
-from brownie import Zerocoin, network, config
+from brownie import ECCZerocoin, network, config
+from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
-from scripts import sigma_proof as sp
+from scripts import ecc_sigma_proof as sp
 from Crypto.Random import random
 import math
 
@@ -18,7 +19,7 @@ class Coin:
         # // 4 --> make sure S does not flip to negative when converting to signed int256
         serial_number = random.randint(2, ch.p // 4)
         #serial_number = 0
-        commitment = ch.commit(serial_number, blinding_factor)
+        commitment = ch.ECC_commit(serial_number, blinding_factor)
         self.blinding_factor = blinding_factor
         self.serial_number = serial_number
         self.commitment = commitment
@@ -28,7 +29,7 @@ def deploy():
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the proof verifier
-    proof_verifier = Zerocoin.deploy({'from': account}, publish_source=pub_source)
+    proof_verifier = ECCZerocoin.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed Zerocoin to address: {proof_verifier.address}")
     return proof_verifier
 
@@ -48,34 +49,34 @@ def create_commitments(n: int, l: int, generate_new = True):
             m = random.randint(2, ch.p-2) if generate_new else (i + 234) * 567211321231
         r = random.randint(2, ch.p-2) if generate_new else (i + 9876) * 987654321521321551235
         r_0_commitment = r if i == l else r_0_commitment
-        commitments.append(ch.commit(m, r))
+        commitments.append(ch.ECC_commit(m, r))
     return commitments, r_0_commitment
 
 
 def mint_coin(zerocoin_contract):
     coin = Coin()
     # When calling the function, the state of the blockchain is not altered, just returns the index
-    index = zerocoin_contract.mint.call(coin.commitment)
+    index = zerocoin_contract.mint.call([coin.commitment.x, coin.commitment.y])
     # When the mint function is called as a transaction, the state of the blockchain is altered
-    zerocoin_contract.mint(coin.commitment, {'from': hf.get_account()})
+    zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
     print(f"Minted coin {coin.serial_number} at index {index}")
     coin.position_in_coins = int(index)
     return coin
 
 def spend_coin(zerocoin_contract, coin: Coin):
     # Get the list of coins
-    result = zerocoin_contract.getCoins()
+    commitment_tuples = zerocoin_contract.getCoins()
     coins = []
-    for comm in result:
-        coins.append(comm)
+    for commitment_tuple in commitment_tuples:
+        coins.append(ch.ECC.EccPoint(commitment_tuple[0], commitment_tuple[1]))
     
-    # for c in coins:
-    #     print(f'Coin: {c}')
+    for c in coins:
+        print(f'Coin: {c.x} {c.y}')
 
     # Homomorphically subtract the serial number from the coin commitments
     commitments = []
     for comm in coins:
-        commitments.append(comm * pow(ch.commit(coin.serial_number, 0), -1, ch.p) % ch.p)
+        commitments.append(comm + -ch.ECC_commit(coin.serial_number, 0))
 
     # proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
@@ -90,15 +91,13 @@ def main():
     zerocoin = deploy()
     #zerocoin = Zerocoin[-1]
 
-    # Mint 7 coins
-    coins = []
-    for i in range(7):
-        coins.append(mint_coin(zerocoin))
+    # Mint a coin
+    coin1 = mint_coin(zerocoin)
+    coin2 = mint_coin(zerocoin)
 
     # Spend the coins in reverse order
-    for coin in reversed(coins):
-        print(f"\n\nSpending coin {coin.serial_number}...")
-        spend_coin(zerocoin, coin)
+    spend_coin(zerocoin, coin2)
+    spend_coin(zerocoin, coin1)
 
 # def main():
 #     # Deploy the contract

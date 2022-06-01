@@ -1,51 +1,44 @@
-// contracts/SigmaProofVerifier.sol
+// contracts/ECCSigmaProofVerifier.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
-import "./BigNum.sol";
+import "./P256.sol";
 
 
-library SigmaProofVerifier {
-
-    uint256 constant G = 3007057779649931580237598654612510797095951971612630025891176454468165002055;
-    uint256 constant H = 20354936247998155748817459761265066334754915076915271771709029462851510023744;
+library ECCSigmaProofVerifier {
 
     struct Proof {
-        uint256[] C_l;
-        uint256[] C_a;
-        uint256[] C_b;
-        uint256[] C_d;
+        ECC.Point[] C_l;
+        ECC.Point[] C_a;
+        ECC.Point[] C_b;
+        ECC.Point[] C_d;
         BigNum.instance[] F;
         BigNum.instance[] Z_a;
         BigNum.instance[] Z_b;
         BigNum.instance z_d;
     }
 
-    function commit(BigNum.instance memory m, BigNum.instance memory r) internal pure returns (uint256) {
-        return mulmod(BigNum.modExp(G, m), BigNum.modExp(H, r), BigNum.PRIME);
-    }
-
     // Check the commitments to l part 1
     function verifyProofCheck1(
         uint256 n,
         BigNum.instance memory x,
-        uint256[] memory C_l, 
-        uint256[] memory C_a,
+        ECC.Point[] memory C_l, 
+        ECC.Point[] memory C_a,
         BigNum.instance[] memory F,
         BigNum.instance[] memory Z_a)
     internal pure returns (bool check) {
         // Declare the left and right side of the check
-        uint256 left;
-        uint256 right;
+        ECC.Point memory left;
+        ECC.Point memory right;
 
         // Check the commitments to l
         check = true;
         for (uint256 i = 0; i < n; i++) {
-            left = BigNum.modExp(C_l[i], x);
-            left = mulmod(left, C_a[i], BigNum.PRIME);
-            right = commit(F[i], Z_a[i]);
-            check = check && left == right;
+            left = ECC.mul(x, C_l[i]);
+            left = ECC.add(left, C_a[i]);
+            right = ECC.commit(F[i], Z_a[i]);
+            check = check && ECC.isEqual(left, right);
         }
     }
 
@@ -53,22 +46,22 @@ library SigmaProofVerifier {
     function verifyProofCheck2(
         uint256 n,
         BigNum.instance memory x,
-        uint256[] memory C_l, 
-        uint256[] memory C_b,
+        ECC.Point[] memory C_l, 
+        ECC.Point[] memory C_b,
         BigNum.instance[] memory F,
         BigNum.instance[] memory Z_b)
     internal pure returns (bool check) {
         // Declare the left and right side of the check
-        uint256 left;
-        uint256 right;
+        ECC.Point memory left;
+        ECC.Point memory right;
 
         check = true;
         for (uint256 i = 0; i < n; i++) {
-            left = BigNum.modExp(C_l[i], BigNum.sub(x, F[i]));
-            left = mulmod(left, C_b[i], BigNum.PRIME);
+            left = ECC.mul(BigNum.sub(x, F[i]), C_l[i]);
+            left = ECC.add(left, C_b[i]);
             //ECC.Point memory right = ECC.commit(0, proof.Z_b[i]);
-            right = BigNum.modExp(H, Z_b[i]);
-            check = check && left == right;
+            right = ECC.mul(Z_b[i], ECC.H());
+            check = check && ECC.isEqual(left, right);
         }
     }
 
@@ -76,17 +69,17 @@ library SigmaProofVerifier {
     function verifyProofCheck3(
         uint256 n,
         BigNum.instance memory x,
-        uint256[] memory commitments,
+        ECC.Point[] memory commitments,
         Proof memory proof)
     internal pure returns (bool check) {
         // Declare the left and right side of the check
-        uint256 left;
-        uint256 right;
+        ECC.Point memory left;
+        ECC.Point memory right;
         
         // N = 2**n
         uint256 N = commitments.length;
 
-        uint256 leftProduct = 1;
+        ECC.Point memory leftSum = ECC.pointAtInf();
         BigNum.instance memory product;
         for (uint256 i = 0; i < N; i++) {
             // Calculate the product of F_j, i_j
@@ -98,29 +91,29 @@ library SigmaProofVerifier {
                 else
                     product = BigNum.mul(product, BigNum.sub(x, proof.F[j]));
             }
-            leftProduct = mulmod(leftProduct, BigNum.modExp(commitments[i], product), BigNum.PRIME);
+            leftSum = ECC.add(leftSum, ECC.mul(product, commitments[i]));
         }
 
         // Calculate the sum of the other commitments
-        uint256 rightProduct = 1;
+        ECC.Point memory rightSum = ECC.pointAtInf();
         BigNum.instance memory xPowk = BigNum._new(1);
         for (uint256 k = 0; k < n; k++) {
             xPowk.neg = true;
-            rightProduct = mulmod(rightProduct, BigNum.modExp(proof.C_d[k], xPowk), BigNum.PRIME);
+            rightSum = ECC.add(rightSum, ECC.mul(xPowk, proof.C_d[k]));
             xPowk.neg = false;
             xPowk = BigNum.mul(xPowk, x);
         }
 
-        left = mulmod(leftProduct, rightProduct, BigNum.PRIME);
+        left = ECC.add(leftSum, rightSum);
         // ECC.Point memory right = ECC.commit(0, proof.z_d);
-        right = BigNum.modExp(H, proof.z_d);
-        check = left == right;
+        right = ECC.mul(proof.z_d, ECC.H());
+        check = ECC.isEqual(left, right);
     }
 
     function hashAll(
         uint256 serialNumber,
         bytes memory message,
-        uint256[] memory commitments,
+        ECC.Point[] memory commitments,
         Proof memory proof)
     internal pure returns (bytes32 result) {
         // Hash the serial number
@@ -130,25 +123,25 @@ library SigmaProofVerifier {
         result = sha256(abi.encodePacked(result, message));
 
         // Hash the ECC curve generator points
-        result = sha256(abi.encodePacked(result, G));
-        result = sha256(abi.encodePacked(result, H));
+        result = sha256(abi.encodePacked(result, ECC.G().x, ECC.G().y));
+        result = sha256(abi.encodePacked(result, ECC.H().x, ECC.H().y));
 
         // Hash the commitments
         for (uint256 i = 0; i < commitments.length; i++)
-            result = sha256(abi.encodePacked(result, commitments[i]));
+            result = sha256(abi.encodePacked(result, commitments[i].x, commitments[i].y));
         for (uint256 i = 0; i < proof.C_l.length; i++)
-            result = sha256(abi.encodePacked(result, proof.C_l[i]));
+            result = sha256(abi.encodePacked(result, proof.C_l[i].x, proof.C_l[i].y));
         for (uint256 i = 0; i < proof.C_a.length; i++)
-            result = sha256(abi.encodePacked(result, proof.C_a[i]));
+            result = sha256(abi.encodePacked(result, proof.C_a[i].x, proof.C_a[i].y));
         for (uint256 i = 0; i < proof.C_b.length; i++)
-            result = sha256(abi.encodePacked(result, proof.C_b[i]));
+            result = sha256(abi.encodePacked(result, proof.C_b[i].x, proof.C_b[i].y));
         for (uint256 i = 0; i < proof.C_d.length; i++)
-            result = sha256(abi.encodePacked(result, proof.C_d[i]));
+            result = sha256(abi.encodePacked(result, proof.C_d[i].x, proof.C_d[i].y));
     }
 
     function verify(
         uint256 serialNumber,
-        uint256[] memory commitments,
+        ECC.Point[] memory commitments,
         uint256 n,
         Proof memory proof)
     internal pure returns (bool result) {
@@ -160,6 +153,24 @@ library SigmaProofVerifier {
 
         result = verifyProofCheck1(n, x, proof.C_l, proof.C_a, proof.F, proof.Z_a);
         result = result && verifyProofCheck2(n, x, proof.C_l, proof.C_b, proof.F, proof.Z_b);
-        result = result && verifyProofCheck3(n, x, commitments, proof);
+        // result = result && verifyProofCheck3(n, x, commitments, proof);
     }
+
+
+    // function testHash(ECC.Point[] memory points, BigNum.instance[] memory nums) public pure returns (bytes32 result) {
+    //     // hash all the points
+    //     result = 0x00;
+    //     for (uint256 i = 0; i < points.length; i++)
+    //         result = sha256(abi.encodePacked(result, points[i].x, points[i].y));
+
+    //     // hash all the numbers
+    //     for (uint256 i = 0; i < nums.length; i++) {
+    //         // hash all the cells individually
+    //         for (uint256 j = 0; j < nums[i].val.length; j++)
+    //             // nums[i].val[j] is a uint128 not a uint256 --> encide as bytes16
+    //             result = sha256(abi.encodePacked(result, nums[i].val[j]));
+    //         // nums[i].neg is a bool not a uint256 --> encode as bytes1
+    //         result = sha256(abi.encodePacked(result, nums[i].neg));
+    //     }
+    // }
 }
