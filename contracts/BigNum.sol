@@ -269,24 +269,38 @@ library BigNum {
 
 
     // Calculates a uint256 to the power of a big number mod p
-    function modExp(uint256 base, BigNum.instance memory power) internal view returns (uint256 result) {
+    function modExp(uint256 base, BigNum.instance memory exp) internal view returns (uint256 result) {
+
         // 0 or 1 to the power of anything is 0 or 1 respectively
         if (base == 0 || base == 1)
             return base;
 
         // When calculating a negative power, we have to invert the base
         // Use Fermats little theorem to calculate the multiplicative inverse
-        if (power.neg == true)
+        if (exp.neg == true)
             base = modExp(base, PRIME - 2);
 
-        result = 1;
-        for (uint256 i = 0; i < power.val.length; i++) {
-            uint256 tmp = base;
-            // Multiply the correct power of 128
-            for (uint256 j = 0; j < i; j++)
-                tmp = modExp(tmp, 2**128);
-            tmp = modExp(tmp, uint256(power.val[i]));
-            result = mulmod(result, tmp, PRIME);
+        uint128[] memory inputToPrecompile = new uint128[](10 + exp.val.length * 0x20);
+        inputToPrecompile[0] = 0x20; // length of base
+        inputToPrecompile[2] = uint128(0x10 * exp.val.length); // length of exponent
+        inputToPrecompile[4] = 0x20; // length of modulus
+        inputToPrecompile[6] = uint128(base & LOWER_MASK); // base
+        inputToPrecompile[7] = uint128(base << 128); // base
+        for (uint256 i = 0; i < exp.val.length; i++)
+            inputToPrecompile[8 + i] = exp.val[i];
+        inputToPrecompile[8 + exp.val.length] = uint128(PRIME & LOWER_MASK); // modulus
+        inputToPrecompile[9 + exp.val.length] = uint128(PRIME << 128); // modulus
+
+        assembly {
+            // define pointer
+            let p := mload(0x40)
+            // store data assembly-favouring ways
+
+            if iszero(staticcall(sub(gas(), 2000), 0x05, inputToPrecompile, 0xc0, p, 0x20)) {
+                revert(0, 0)
+            }
+            // data
+            result := mload(p)
         }
     }
 
