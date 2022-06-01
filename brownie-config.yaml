@@ -1,6 +1,5 @@
 dependencies:
   - OpenZeppelin/openzeppelin-contracts@4.6.0
-  # - witnet/elliptic-curve-solidity@0.2.1
 compiler:
   solc:
     optimizer:
@@ -9,7 +8,6 @@ compiler:
         yul: true
     remappings:
       - '@openzeppelin=OpenZeppelin/openzeppelin-contracts@4.6.0'
-      # - '@ecc=witnet/elliptic-curve-solidity@0.2.1'
 wallets:
   from_key: ${PRIVATE_KEY}
 networks:

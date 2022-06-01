@@ -1,5 +1,5 @@
 from eth_utils import to_tuple
-from brownie import Zerocoin, network, config
+from brownie import Zerocoin, DeltaToken, network, config
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
 from scripts import sigma_proof as sp
@@ -23,14 +23,24 @@ class Coin:
         self.serial_number = serial_number
         self.commitment = commitment
 
-def deploy():
+def deployDeltaToken():
     account = hf.get_account()
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
-    # deploy the proof verifier
-    proof_verifier = Zerocoin.deploy({'from': account}, publish_source=pub_source)
-    print(f"Deployed Zerocoin to address: {proof_verifier.address}")
-    return proof_verifier
+    # deploy the delta token with an initial supply of 1000 tokens
+    deltaToken = DeltaToken.deploy(100000, {'from': account}, publish_source=pub_source)
+    print(f"Deployed DeltaToken to address: {deltaToken.address}")
+    return deltaToken
+
+def deployZerocoin(ERC20_address):
+    account = hf.get_account()
+
+    pub_source = publish_source=config['networks'][network.show_active()]['verify']
+    # deploy the zerocoin contract
+    zerocoin = Zerocoin.deploy(ERC20_address, {'from': account}, publish_source=pub_source)
+    print(f"Deployed Zerocoin to address: {zerocoin.address}")
+    return zerocoin
+
 
 def create_commitments(n: int, l: int, generate_new = True):
     # Create a list of commitments, one of which is a commitment to 0
@@ -86,19 +96,42 @@ def spend_coin(zerocoin_contract, coin: Coin):
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
 
 def main():
-    # Deploy the contract
-    zerocoin = deploy()
+    # Deploy the contracts
+    deltaToken = deployDeltaToken()
+    #deltaToken = DeltaToken[-1]
+    zerocoin = deployZerocoin(deltaToken.address)
     #zerocoin = Zerocoin[-1]
+
+    # Add allowance for the zerocoin contract to spend the delta token
+    # This allows the zerocoin contract to transfer tokens from the caller in the mint function
+    deltaToken.approve(zerocoin.address, 10000, {'from': hf.get_account()})
+
+    # Get the balance of the zerocoin contract
+    balance = zerocoin.getBalance()
+    print(f"Balance of zerocoin contract: {balance}")
 
     # Mint 7 coins
     coins = []
     for i in range(3):
         coins.append(mint_coin(zerocoin))
+        # Get the balance of the zerocoin contract
+        balance = zerocoin.getBalance()
+        print(f"Balance of zerocoin contract: {balance}")
 
-    # Spend the coins in reverse order
-    for coin in reversed(coins):
-        print(f"\n\nSpending coin {coin.serial_number}...")
-        spend_coin(zerocoin, coin)
+
+    # Spend a random coin
+    coin = coins[random.randint(0, len(coins)-1)]
+    print(f"\n\nSpending coin {coin.serial_number}...")
+    spend_coin(zerocoin, coin)
+
+    # Get the balance of the zerocoin contract
+    balance = zerocoin.getBalance()
+    print(f"Balance of zerocoin contract: {balance}")
+
+    # # Spend the coins in reverse order
+    # for coin in reversed(coins):
+    #     print(f"\n\nSpending coin {coin.serial_number}...")
+    #     spend_coin(zerocoin, coin)
 
     # # Reset the contract
     # zerocoin.reset({'from': hf.get_account()})

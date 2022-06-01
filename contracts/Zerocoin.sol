@@ -4,18 +4,15 @@
 pragma solidity ^0.8.0;
 
 import "./SigmaProofVerifier.sol";
+import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/utils/Context.sol";
 
-contract Zerocoin {
-    // Constructor
-    constructor() {
-        lastIdx = 0;
-        logCounter = 1;
+contract Zerocoin is Context{
+    IERC20 token;
 
-        // The list of coins must have a minimum size of 2
-        // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
-        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
-    }
+    // The fixed amount of tokens minted and spent by each call to mint() and spend()
+    uint256 constant public AMOUNT = 1000;
 
     // The list of commitments to (S, r) i.e. the list of coins
     // The length of this list must be a power of 2 at all times
@@ -31,10 +28,31 @@ contract Zerocoin {
     // This record is kept to prevent double spending
     uint256[] spentSerialNumbers;
 
+    // Constructor
+    constructor(address tokenAddress) {
+        token = IERC20(tokenAddress);
+        lastIdx = 0;
+        logCounter = 1;
+
+        // The list of coins must have a minimum size of 2
+        // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
+        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
+        coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
+    }
+
+    // Modifier to check token allowance
+    modifier checkAllowance(uint256 amount) {
+        require(token.allowance(_msgSender(), address(this)) >= amount, "Error");
+        _;
+    }
+
     // The mint function adds a commitment to the list of coins and returns its index
     // TODO: Minting should require burning some ERC20 token
     // It then ensures the list has length of a power of 2
-    function mint(uint256 commitment) public returns(uint256 index) {
+    function mint(uint256 commitment) public checkAllowance(AMOUNT) returns(uint256 index) {
+        // Deposit the amount in the contract
+        token.transferFrom(_msgSender(), address(this), AMOUNT);
+
         index = lastIdx;
         
         // If the list is already long enough, assign the commitment to the next index
@@ -46,9 +64,8 @@ contract Zerocoin {
             // Otherwise, append the commitment to the list
             coins.push(commitment);
 
-            // Ensure the list has length of a power of 2 (fill up with zeros)
+            // Ensure the list has length of a power of 2 (fill up with some commitments)
             while (coins.length & (coins.length - 1) != 0)
-                // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
                 coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
 
             logCounter++;
@@ -83,6 +100,9 @@ contract Zerocoin {
 
         // Mark the coin as spent
         spentSerialNumbers.push(serialNumber);
+
+        // Transfer the ERC20 token to the caller
+        token.transfer(_msgSender(), AMOUNT);
     }
 
     function getCoins() public view returns(uint256[] memory) {
@@ -99,5 +119,10 @@ contract Zerocoin {
         coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
         coins.push(SigmaProofVerifier.commit(BigNum._new(42), BigNum._new(42)));
         delete spentSerialNumbers;
+    }
+
+    // Return the amount of tokens currently held by the contract
+    function getBalance() public view returns(uint256 balance) {
+        return token.balanceOf(address(this));
     }
 }

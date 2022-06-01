@@ -24,6 +24,14 @@ def main():
     # Deploy the contract
     proof_verifier = deploy()
 
+    # test modExp
+    base = ch.g
+    exponent = ch.BigNum(42)
+
+    result = proof_verifier.testModExpBig(base, exponent.to_tuple())
+    print(f"ModExp: {result}")
+    print(f'Correct: {result == pow(base, exponent.to_int(), ch.p)}')
+
     # Attempt to verify a proof
     # proof structure:
     # ECC.Point c_a;
