@@ -92,7 +92,7 @@ def main():
 
     # Mint 7 coins
     coins = []
-    for i in range(7):
+    for i in range(3):
         coins.append(mint_coin(zerocoin))
 
     # Spend the coins in reverse order
@@ -100,35 +100,15 @@ def main():
         print(f"\n\nSpending coin {coin.serial_number}...")
         spend_coin(zerocoin, coin)
 
-# def main():
-#     # Deploy the contract
-#     proof_verifier = deploy()
-#     #proof_verifier = SigmaProofVerifier[-1]
+    # # Reset the contract
+    # zerocoin.reset({'from': hf.get_account()})
 
-#     # Create commitments
-#     n = 4
-#     l = 4
-#     commitments, r_0_commitment = create_commitments(n, l, generate_new=True)
+    # # Mint 3 coins
+    # coins = []
+    # for i in range(3):
+    #     coins.append(mint_coin(zerocoin))
 
-#     # Create a proof
-#     proof = sp.generate_proof(commitments, 42, l, r_0_commitment)
-    
-
-#     # # Verify the proof off-chain
-#     # print("Verifying proof off-chain...")
-#     # proof_valid, msg = sp.verify_proof(42, commitments, proof)
-#     # print("The proof is valid:", proof_valid)
-#     # print("Message:", msg)
-
-#     # Verify the proof on chain
-#     print("Verifying proof on-chain...")
-#     # Generate commitment tuples
-#     commitments_tup = []
-#     for point in commitments:
-#         commitments_tup.append([point.x, point.y])
-
-#     result = proof_verifier.verify(commitments_tup, n, proof.to_tuple())
-#     print(f"Verification result: {result}")
-
-#     # result = proof_verifier.verify.transact(commitments_tup, n, proof.to_tuple(), {'from': hf.get_account(), 'gas_limit': 30000000})
-#     # print(f"Verification result: {result.info()}")
+    # # Spend the coins in the same order
+    # for coin in coins:
+    #     print(f"\n\nSpending coin {coin.serial_number}...")
+    #     spend_coin(zerocoin, coin)

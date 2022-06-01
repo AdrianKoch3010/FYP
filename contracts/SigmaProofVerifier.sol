@@ -22,7 +22,7 @@ library SigmaProofVerifier {
         BigNum.instance z_d;
     }
 
-    function commit(BigNum.instance memory m, BigNum.instance memory r) internal pure returns (uint256) {
+    function commit(BigNum.instance memory m, BigNum.instance memory r) internal view returns (uint256) {
         return mulmod(BigNum.modExp(G, m), BigNum.modExp(H, r), BigNum.PRIME);
     }
 
@@ -34,7 +34,7 @@ library SigmaProofVerifier {
         uint256[] memory C_a,
         BigNum.instance[] memory F,
         BigNum.instance[] memory Z_a)
-    internal pure returns (bool check) {
+    internal view returns (bool check) {
         // Declare the left and right side of the check
         uint256 left;
         uint256 right;
@@ -57,7 +57,7 @@ library SigmaProofVerifier {
         uint256[] memory C_b,
         BigNum.instance[] memory F,
         BigNum.instance[] memory Z_b)
-    internal pure returns (bool check) {
+    internal view returns (bool check) {
         // Declare the left and right side of the check
         uint256 left;
         uint256 right;
@@ -78,7 +78,7 @@ library SigmaProofVerifier {
         BigNum.instance memory x,
         uint256[] memory commitments,
         Proof memory proof)
-    internal pure returns (bool check) {
+    internal view returns (bool check) {
         // Declare the left and right side of the check
         uint256 left;
         uint256 right;
@@ -151,7 +151,7 @@ library SigmaProofVerifier {
         uint256[] memory commitments,
         uint256 n,
         Proof memory proof)
-    internal pure returns (bool result) {
+    internal view returns (bool result) {
         // Compute the hash used for the challenge
         uint256 xInt = uint256(hashAll(serialNumber, "Adrian", commitments, proof));
         BigNum.instance memory x = BigNum.instance(new uint128[](2), false);

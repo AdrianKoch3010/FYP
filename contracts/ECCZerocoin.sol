@@ -90,7 +90,7 @@ contract ECCZerocoin {
     // TODO: Should the owner have this power? Propably in an actual scenario, no
     function reset() public {
         lastIdx = 0;
-        logCounter = 0;
+        logCounter = 1;
         delete coins;
         coins.push(ECC.commit(42, 42));
         coins.push(ECC.commit(42, 42));

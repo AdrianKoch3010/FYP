@@ -48,11 +48,11 @@ contract SimpleProofVerifier {
         return ECC.mul(scalar, point);
     }
 
-    function testModExp(uint256 base, uint256 exponent) public pure returns (uint256) {
+    function testModExp(uint256 base, uint256 exponent) public view returns (uint256) {
         return BigNum.modExp(base, exponent);
     }
 
-    function testModExpBig(uint256 base, BigNum.instance memory exponent) public pure returns(uint256) {
+    function testModExpBig(uint256 base, BigNum.instance memory exponent) public view returns(uint256) {
         return BigNum.modExp(base, exponent);
     }
 
@@ -81,7 +81,7 @@ contract SimpleProofVerifier {
         return (left, right, check1, check2);
     }
 
-    function verifySimple(uint256 commitment, SimpleProof memory proof) public pure returns (uint256, uint256, bool, bool) {
+    function verifySimple(uint256 commitment, SimpleProof memory proof) public view returns (uint256, uint256, bool, bool) {
         // check1 = pow(C, x, p) * Ca % p == commit(f, za)
         // check2 = pow(C, x-f, p) * Cb % p == commit(0, zb)
 

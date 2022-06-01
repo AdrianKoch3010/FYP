@@ -227,28 +227,49 @@ library BigNum {
     // This function is inspired by https://github.com/monicanagent/cypherpoker/issues/5
     // Note: exp values must be 255 or shorter, otherwise the loop counter overflows
     // -> This isn't an issue as the function is only called with exponents that are 128 bit max
-    function modExp(uint256 base, uint256 exp) internal pure returns (uint256 result)  {
-        result = 1;
-        if (exp > 2**255 - 1) {
-            for (uint count = 1; count <= exp / 2; count *= 2) {
-                if (exp & count != 0)
-                    result = mulmod(result, base, PRIME);
-                base = mulmod(base, base, PRIME);
+    // function modExp(uint256 base, uint256 exp) internal pure returns (uint256 result)  {
+    //     result = 1;
+    //     if (exp > 2**255 - 1) {
+    //         for (uint count = 1; count <= exp / 2; count *= 2) {
+    //             if (exp & count != 0)
+    //                 result = mulmod(result, base, PRIME);
+    //             base = mulmod(base, base, PRIME);
+    //         }
+    //         if (exp & 1 << 255 != 0)
+    //             result = mulmod(result, base, PRIME);
+    //     }
+    //     else {
+    //         for (uint count = 1; count <= exp; count *= 2) {
+    //             if (exp & count != 0)
+    //                 result = mulmod(result, base, PRIME);
+    //             base = mulmod(base, base, PRIME);
+    //         }
+    //     }
+    // }
+
+    // Inspired by https://medium.com/@rbkhmrcr/precompiles-solidity-e5d29bd428c4
+    function modExp(uint256 base, uint256 e) internal view returns (uint256 result) {
+        assembly {
+            // define pointer
+            let p := mload(0x40)
+            // store data assembly-favouring ways
+            mstore(p, 0x20)             // Length of Base
+            mstore(add(p, 0x20), 0x20)  // Length of Exponent
+            mstore(add(p, 0x40), 0x20)  // Length of Modulus
+            mstore(add(p, 0x60), base)  // Base
+            mstore(add(p, 0x80), e)     // Exponent
+            mstore(add(p, 0xa0), PRIME) // Modulus
+            if iszero(staticcall(sub(gas(), 2000), 0x05, p, 0xc0, p, 0x20)) {
+                revert(0, 0)
             }
-            if (exp & 1 << 255 != 0)
-                result = mulmod(result, base, PRIME);
-        }
-        else {
-            for (uint count = 1; count <= exp; count *= 2) {
-                if (exp & count != 0)
-                    result = mulmod(result, base, PRIME);
-                base = mulmod(base, base, PRIME);
-            }
+            // data
+            result := mload(p)
         }
     }
 
+
     // Calculates a uint256 to the power of a big number mod p
-    function modExp(uint256 base, BigNum.instance memory power) internal pure returns (uint256 result) {
+    function modExp(uint256 base, BigNum.instance memory power) internal view returns (uint256 result) {
         // 0 or 1 to the power of anything is 0 or 1 respectively
         if (base == 0 || base == 1)
             return base;
@@ -268,4 +289,27 @@ library BigNum {
             result = mulmod(result, tmp, PRIME);
         }
     }
+
+
+    // // Calculates a uint256 to the power of a big number mod p
+    // function modExp(uint256 base, BigNum.instance memory power) internal view returns (uint256 result) {
+    //     // 0 or 1 to the power of anything is 0 or 1 respectively
+    //     if (base == 0 || base == 1)
+    //         return base;
+
+    //     // When calculating a negative power, we have to invert the base
+    //     // Use Fermats little theorem to calculate the multiplicative inverse
+    //     if (power.neg == true)
+    //         base = modExp(base, PRIME - 2);
+
+    //     result = 1;
+    //     for (uint256 i = 0; i < power.val.length; i++) {
+    //         uint256 tmp = base;
+    //         // Multiply the correct power of 128
+    //         for (uint256 j = 0; j < i; j++)
+    //             tmp = modExp(tmp, 2**128);
+    //         tmp = modExp(tmp, uint256(power.val[i]));
+    //         result = mulmod(result, tmp, PRIME);
+    //     }
+    // }
 }
