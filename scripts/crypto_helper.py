@@ -22,9 +22,12 @@ p = 2**256 - 2**224 + 2**192 + 2**96 - 1
 
 G = ECC.construct(curve='P-256', point_x=0xc6147090dc789cd1827476f06c4080f727117427feb1ea10f5f58a1b8f26a646, point_y=0x9a8048d281edee5f5d7859ede6c7000ed420b55ac4604558c95b5e6f32de2276).pointQ
 H = ECC.construct(curve='P-256', point_x=0x418ed4f85c649bf336d9e213337bfbb8d5e203c6ec1ad59d6c975e66b358bf3b, point_y=0xa479d9ab22e0c2e0fdf9659656b9efcd8f24da23cfc1eedfa852df9a1e621309).pointQ
+g = 3007057779649931580237598654612510797095951971612630025891176454468165002055
+h = 20354936247998155748817459761265066334754915076915271771709029462851510023744
 
-# def commit(m:int, r: int) -> int:
-#     return pow(g, m, p) * pow(h, r, p) % p
+
+def commit(m:int, r: int) -> int:
+    return pow(g, m, p) * pow(h, r, p) % p
 
 def ECC_commit(m:int, r: int) -> ECC.EccPoint:
     return ECC_mul(m, G) + ECC_mul(r, H)

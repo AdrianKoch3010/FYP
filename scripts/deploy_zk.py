@@ -1,5 +1,5 @@
 from Python.Python_Zerocoin.HelperFunctions import G
-from brownie import ProofVerifier, ECC, EllipticCurve, BigNum, accounts, network, config
+from brownie import SimpleProofVerifier, ECC, EllipticCurve, BigNum, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
@@ -15,7 +15,7 @@ def deploy():
     #BigNum.deploy({'from': account}, publish_source=pub_source)
     #ECC.deploy({'from': account}, publish_source=pub_source)
     # deploy the proof verifier
-    proof_verifier = ProofVerifier.deploy({'from': account}, publish_source=pub_source)
+    proof_verifier = SimpleProofVerifier.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed ProofVerifier to address: {proof_verifier.address}")
     return proof_verifier
 
@@ -33,7 +33,7 @@ def main():
     # uint256 z_b;
     
     _max = ch.p - 2
-    generate_new = True
+    generate_new = False
 
     p = ch.p
     m = 1
@@ -55,9 +55,9 @@ def main():
     # Ca = a * G + s * H
     # Cb = (a*m) * G + t * H
     #print('c: {c.x}, {c.y}'.format(c=c))
-    C = ch.ECC_commit(m, r)
-    Ca = ch.ECC_commit(a, s)
-    Cb = ch.ECC_commit(a*m, t)
+    C = ch.commit(m, r)
+    Ca = ch.commit(a, s)
+    Cb = ch.commit(a*m, t)
 
     # Generate x
     #x = random.getrandbits(128)
@@ -80,24 +80,21 @@ def main():
     # print('zb:', zb)
 
     print('p:', math.ceil(math.log(p, 2)))
-    print('C.x: ', math.ceil(math.log(C.x, 2)))
-    print('C.y: ', math.ceil(math.log(C.y, 2)))
-    print('Ca.x: ', math.ceil(math.log(Ca.x, 2)))
-    print('Ca.y: ', math.ceil(math.log(Ca.y, 2)))
-    print('Cb.x: ', math.ceil(math.log(Cb.x, 2)))
-    print('Cb.y: ', math.ceil(math.log(Cb.y, 2)))
+    print('C: ', math.ceil(math.log(C, 2)))
+    print('Ca: ', math.ceil(math.log(Ca, 2)))
+    print('Cb: ', math.ceil(math.log(Cb, 2)))
     print('f: ', math.ceil(math.log(f, 2)))
     print('za: ', math.ceil(math.log(za, 2)))
     print('zb: ', math.ceil(math.log(abs(zb), 2)))
 
-    commitment = [C.x, C.y]
-    proof = [[Ca.x, Ca.y], [Cb.x, Cb.y], ch.BigNum(f).to_tuple(), ch.BigNum(za).to_tuple(), ch.BigNum(zb).to_tuple()]
+    commitment = C
+    proof = [Ca, Cb, ch.BigNum(f).to_tuple(), ch.BigNum(za).to_tuple(), ch.BigNum(zb).to_tuple()]
     # print('commitment:', commitment)
     # print('proof:', proof)
 
     # Verify the proof
-    left, right, check1, check2 = proof_verifier.verify(commitment, proof)
-    #print('left:', left)
+    left, right, check1, check2 = proof_verifier.verifySimple(commitment, proof)
+    print('left:', left)
     print('right:', right)
     print('check1:', check1)
     print('check2:', check2)
