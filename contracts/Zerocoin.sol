@@ -6,9 +6,10 @@ pragma solidity ^0.8.0;
 import "./SigmaProofVerifier.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-contract Zerocoin is Context{
+contract Zerocoin is Context, AccessControlEnumerable{
     IERC20 token;
 
     // The fixed amount of tokens minted and spent by each call to mint() and spend()
@@ -30,6 +31,7 @@ contract Zerocoin is Context{
 
     // Constructor
     constructor(address tokenAddress) {
+        _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         token = IERC20(tokenAddress);
         lastIdx = 0;
         logCounter = 1;
@@ -42,7 +44,7 @@ contract Zerocoin is Context{
 
     // Modifier to check token allowance
     modifier checkAllowance(uint256 amount) {
-        require(token.allowance(_msgSender(), address(this)) >= amount, "Error");
+        require(token.allowance(_msgSender(), address(this)) >= amount, "The contract has not been given the necessary allowance");
         _;
     }
 
@@ -91,11 +93,9 @@ contract Zerocoin is Context{
         uint256 negExpSerialNumber = BigNum.modExp(SigmaProofVerifier.G, serialNumberNeg);
         for (uint256 i = 0; i < coins.length; i++)
             commitments[i] = mulmod(coins[i], negExpSerialNumber, BigNum.PRIME);
-            //commitments[i] = ECC.add(coins[i], ECC.inv(ECC.mul(int256(serialNumber), ECC.G())));
         
         // Check the proof
         success = SigmaProofVerifier.verify(serialNumber, commitments, logCounter, proof);
-        //success = SigmaProofVerifier.verify(serialNumber, coins, logCounter, proof);
         require(success, "The proof is invalid");
 
         // Mark the coin as spent
@@ -113,6 +113,7 @@ contract Zerocoin is Context{
     // Only for testing
     // TODO: Should the owner have this power? Propably in an actual scenario, no
     function reset() public {
+        require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admins can reset the contract");
         lastIdx = 0;
         logCounter = 1;
         delete coins;

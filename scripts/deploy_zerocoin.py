@@ -28,7 +28,7 @@ def deployDeltaToken():
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the delta token with an initial supply of 1000 tokens
-    deltaToken = DeltaToken.deploy(100000, {'from': account}, publish_source=pub_source)
+    deltaToken = DeltaToken.deploy(10000000, {'from': account}, publish_source=pub_source)
     print(f"Deployed DeltaToken to address: {deltaToken.address}")
     return deltaToken
 
@@ -94,6 +94,7 @@ def spend_coin(zerocoin_contract, coin: Coin):
     tx = zerocoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
     tx.wait(1)
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
+    print(f"Calldata length: {len(zerocoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4} bytes")
 
 def main():
     # Deploy the contracts
@@ -104,7 +105,7 @@ def main():
 
     # Add allowance for the zerocoin contract to spend the delta token
     # This allows the zerocoin contract to transfer tokens from the caller in the mint function
-    deltaToken.approve(zerocoin.address, 10000, {'from': hf.get_account()})
+    deltaToken.approve(zerocoin.address, 1000000, {'from': hf.get_account()})
 
     # Get the balance of the zerocoin contract
     balance = zerocoin.getBalance()
@@ -117,6 +118,7 @@ def main():
         # Get the balance of the zerocoin contract
         balance = zerocoin.getBalance()
         print(f"Balance of zerocoin contract: {balance}")
+        # Print the proof required to spend the coin
 
 
     # Spend a random coin

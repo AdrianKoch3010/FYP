@@ -15,7 +15,7 @@ contract DeltaToken is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pau
     uint256 public constant INITIAL_SUPPLY = 1000000000;
 
 
-    constructor(uint256 initialSupply) ERC20("Delta", "DLT") {  
+    constructor(uint256 initialSupply) ERC20("Delta", "DLT") {
         _mint(_msgSender(), initialSupply);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
