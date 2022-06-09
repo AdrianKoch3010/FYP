@@ -1,5 +1,5 @@
 from Python.Python_Zerocoin.HelperFunctions import G
-from brownie import ProofVerifier, ECC, EllipticCurve, BigNum, accounts, network, config
+from brownie import ProofVerifierTest, ECC, EllipticCurve, BigNum, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
@@ -15,7 +15,7 @@ def deploy():
     BigNum.deploy({'from': account}, publish_source=pub_source)
     ECC.deploy({'from': account}, publish_source=pub_source)
     # deploy the proof verifier
-    proof_verifier = ProofVerifier.deploy({'from': account}, publish_source=pub_source)
+    proof_verifier = ProofVerifierTest.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed ProofVerifier to address: {proof_verifier.address}")
     return proof_verifier
 

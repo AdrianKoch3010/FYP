@@ -5,10 +5,11 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Pausable.sol";
-import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
+import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-contract DeltaToken is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pausable {
+contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
+    bytes32 public constant USER_ROLE = keccak256("userRole");
     bytes32 public constant MINTER_ROLE = keccak256("minterRole");
     bytes32 public constant PAUSER_ROLE = keccak256("pauserRole");
 
@@ -16,11 +17,16 @@ contract DeltaToken is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pau
 
 
     constructor(uint256 initialSupply) ERC20("Delta", "DLT") {
-        _mint(_msgSender(), initialSupply);
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
 
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+
+        // Both the creator of the contract and the contract itself are users
+        _setupRole(USER_ROLE, _msgSender());
+        _setupRole(USER_ROLE, address(this));
+
+        _mint(_msgSender(), initialSupply);
     }
 
     function mint(address to, uint256 amount) public virtual {
@@ -38,9 +44,18 @@ contract DeltaToken is Context, AccessControlEnumerable, ERC20Burnable, ERC20Pau
         _unpause();
     }
 
-    // Not sure what this is for
+    function addUserToWhitelist() public {
+        super._grantRole(USER_ROLE, _msgSender());
+    }
+
+    function removeUserFromWhitelist() public {
+        super._revokeRole(USER_ROLE, _msgSender());
+    }
+
     function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, value);
+
+        //require(hasRole(USER_ROLE, to), "Only users can transfer tokens");
     }
 
 }

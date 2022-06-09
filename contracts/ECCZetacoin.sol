@@ -1,11 +1,11 @@
-// contracts/ECCZerocoin.sol
+// contracts/ECCZetacoin.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
 
 import "./ECCSigmaProofVerifier.sol";
 
-contract ECCZerocoin {
+contract ECCZetacoin {
     // Constructor
     constructor() {
         lastIdx = 0;

@@ -1,4 +1,4 @@
-// contracts/Zerocoin.sol
+// contracts/Zetacoin.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControlEnumerable.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
 
-contract Zerocoin is Context, AccessControlEnumerable{
+contract Zetacoin is Context, AccessControlEnumerable{
     IERC20 token;
 
     // The fixed amount of tokens minted and spent by each call to mint() and spend()

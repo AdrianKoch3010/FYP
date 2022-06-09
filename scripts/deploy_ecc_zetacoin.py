@@ -1,5 +1,5 @@
 from eth_utils import to_tuple
-from brownie import ECCZerocoin, network, config
+from brownie import ECCZetacoin, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
@@ -29,9 +29,9 @@ def deploy():
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the proof verifier
-    proof_verifier = ECCZerocoin.deploy({'from': account}, publish_source=pub_source)
-    print(f"Deployed Zerocoin to address: {proof_verifier.address}")
-    return proof_verifier
+    zetacoin = ECCZetacoin.deploy({'from': account}, publish_source=pub_source)
+    print(f"Deployed Zetacoin to address: {zetacoin.address}")
+    return zetacoin
 
 def create_commitments(n: int, l: int, generate_new = True):
     # Create a list of commitments, one of which is a commitment to 0
@@ -53,19 +53,19 @@ def create_commitments(n: int, l: int, generate_new = True):
     return commitments, r_0_commitment
 
 
-def mint_coin(zerocoin_contract):
+def mint_coin(zetacoin_contract):
     coin = Coin()
     # When calling the function, the state of the blockchain is not altered, just returns the index
-    index = zerocoin_contract.mint.call([coin.commitment.x, coin.commitment.y])
+    index = zetacoin_contract.mint.call([coin.commitment.x, coin.commitment.y])
     # When the mint function is called as a transaction, the state of the blockchain is altered
-    zerocoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
+    zetacoin_contract.mint([coin.commitment.x, coin.commitment.y], {'from': hf.get_account()})
     print(f"Minted coin {coin.serial_number} at index {index}")
     coin.position_in_coins = int(index)
     return coin
 
-def spend_coin(zerocoin_contract, coin: Coin):
+def spend_coin(zetacoin_contract, coin: Coin):
     # Get the list of coins
-    commitment_tuples = zerocoin_contract.getCoins()
+    commitment_tuples = zetacoin_contract.getCoins()
     coins = []
     for commitment_tuple in commitment_tuples:
         coins.append(ch.ECC.EccPoint(commitment_tuple[0], commitment_tuple[1]))
@@ -82,52 +82,19 @@ def spend_coin(zerocoin_contract, coin: Coin):
     proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     print(f"Generated proof for spending coin {coin.serial_number}")
 
-    tx = zerocoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
+    tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
     tx.wait(1)
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
 
 def main():
     # Deploy the contract
-    zerocoin = deploy()
-    #zerocoin = Zerocoin[-1]
+    zetacoin = deploy()
+    #zetacoin = ECCZetacoin[-1]
 
     # Mint a coin
-    coin1 = mint_coin(zerocoin)
-    coin2 = mint_coin(zerocoin)
+    coin1 = mint_coin(zetacoin)
+    coin2 = mint_coin(zetacoin)
 
     # Spend the coins in reverse order
-    spend_coin(zerocoin, coin2)
-    spend_coin(zerocoin, coin1)
-
-# def main():
-#     # Deploy the contract
-#     proof_verifier = deploy()
-#     #proof_verifier = SigmaProofVerifier[-1]
-
-#     # Create commitments
-#     n = 4
-#     l = 4
-#     commitments, r_0_commitment = create_commitments(n, l, generate_new=True)
-
-#     # Create a proof
-#     proof = sp.generate_proof(commitments, 42, l, r_0_commitment)
-    
-
-#     # # Verify the proof off-chain
-#     # print("Verifying proof off-chain...")
-#     # proof_valid, msg = sp.verify_proof(42, commitments, proof)
-#     # print("The proof is valid:", proof_valid)
-#     # print("Message:", msg)
-
-#     # Verify the proof on chain
-#     print("Verifying proof on-chain...")
-#     # Generate commitment tuples
-#     commitments_tup = []
-#     for point in commitments:
-#         commitments_tup.append([point.x, point.y])
-
-#     result = proof_verifier.verify(commitments_tup, n, proof.to_tuple())
-#     print(f"Verification result: {result}")
-
-#     # result = proof_verifier.verify.transact(commitments_tup, n, proof.to_tuple(), {'from': hf.get_account(), 'gas_limit': 30000000})
-#     # print(f"Verification result: {result.info()}")
+    spend_coin(zetacoin, coin2)
+    spend_coin(zetacoin, coin1)

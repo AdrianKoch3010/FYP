@@ -1,5 +1,5 @@
 from eth_utils import to_tuple
-from brownie import Zerocoin, DeltaToken, network, config
+from brownie import Zetacoin, DeltaToken, network, config
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
 from scripts import sigma_proof as sp
@@ -32,14 +32,14 @@ def deployDeltaToken():
     print(f"Deployed DeltaToken to address: {deltaToken.address}")
     return deltaToken
 
-def deployZerocoin(ERC20_address):
+def deployZetacoin(ERC20_address):
     account = hf.get_account()
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
-    # deploy the zerocoin contract
-    zerocoin = Zerocoin.deploy(ERC20_address, {'from': account}, publish_source=pub_source)
-    print(f"Deployed Zerocoin to address: {zerocoin.address}")
-    return zerocoin
+    # deploy the zetacoin contract
+    zetacoin = Zetacoin.deploy(ERC20_address, {'from': account}, publish_source=pub_source)
+    print(f"Deployed Zetacoin to address: {zetacoin.address}")
+    return zetacoin
 
 
 def create_commitments(n: int, l: int, generate_new = True):
@@ -62,19 +62,19 @@ def create_commitments(n: int, l: int, generate_new = True):
     return commitments, r_0_commitment
 
 
-def mint_coin(zerocoin_contract):
+def mint_coin(zetacoin_contract):
     coin = Coin()
     # When calling the function, the state of the blockchain is not altered, just returns the index
-    index = zerocoin_contract.mint.call(coin.commitment)
+    index = zetacoin_contract.mint.call(coin.commitment)
     # When the mint function is called as a transaction, the state of the blockchain is altered
-    zerocoin_contract.mint(coin.commitment, {'from': hf.get_account()})
+    zetacoin_contract.mint(coin.commitment, {'from': hf.get_account()})
     print(f"Minted coin {coin.serial_number} at index {index}")
     coin.position_in_coins = int(index)
     return coin
 
-def spend_coin(zerocoin_contract, coin: Coin):
+def spend_coin(zetacoin_contract, coin: Coin):
     # Get the list of coins
-    result = zerocoin_contract.getCoins()
+    result = zetacoin_contract.getCoins()
     coins = []
     for comm in result:
         coins.append(comm)
@@ -91,59 +91,59 @@ def spend_coin(zerocoin_contract, coin: Coin):
     proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     print(f"Generated proof for spending coin {coin.serial_number}")
 
-    tx = zerocoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
+    tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
     tx.wait(1)
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
-    print(f"Calldata length: {len(zerocoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4} bytes")
+    print(f"Calldata length: {len(zetacoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4} bytes")
 
 def main():
     # Deploy the contracts
     deltaToken = deployDeltaToken()
     #deltaToken = DeltaToken[-1]
-    zerocoin = deployZerocoin(deltaToken.address)
-    #zerocoin = Zerocoin[-1]
+    zetacoin = deployZetacoin(deltaToken.address)
+    #zetacoin = Zetacoin[-1]
 
-    # Add allowance for the zerocoin contract to spend the delta token
-    # This allows the zerocoin contract to transfer tokens from the caller in the mint function
-    deltaToken.approve(zerocoin.address, 1000000, {'from': hf.get_account()})
+    # Add allowance for the zetacoin contract to spend the delta token
+    # This allows the zetacoin contract to transfer tokens from the caller in the mint function
+    deltaToken.approve(zetacoin.address, 1000000, {'from': hf.get_account()})
 
-    # Get the balance of the zerocoin contract
-    balance = zerocoin.getBalance()
-    print(f"Balance of zerocoin contract: {balance}")
+    # Get the balance of the zetacoin contract
+    balance = zetacoin.getBalance()
+    print(f"Balance of Zetacoin contract: {balance}")
 
     # Mint 7 coins
     coins = []
     for i in range(3):
-        coins.append(mint_coin(zerocoin))
-        # Get the balance of the zerocoin contract
-        balance = zerocoin.getBalance()
-        print(f"Balance of zerocoin contract: {balance}")
+        coins.append(mint_coin(zetacoin))
+        # Get the balance of the zetacoin contract
+        balance = zetacoin.getBalance()
+        print(f"Balance of Zetacoin contract: {balance}")
         # Print the proof required to spend the coin
 
 
     # Spend a random coin
     coin = coins[random.randint(0, len(coins)-1)]
     print(f"\n\nSpending coin {coin.serial_number}...")
-    spend_coin(zerocoin, coin)
+    spend_coin(zetacoin, coin)
 
-    # Get the balance of the zerocoin contract
-    balance = zerocoin.getBalance()
-    print(f"Balance of zerocoin contract: {balance}")
+    # Get the balance of the zetacoin contract
+    balance = zetacoin.getBalance()
+    print(f"Balance of Zetacoin contract: {balance}")
 
     # # Spend the coins in reverse order
     # for coin in reversed(coins):
     #     print(f"\n\nSpending coin {coin.serial_number}...")
-    #     spend_coin(zerocoin, coin)
+    #     spend_coin(zetacoin, coin)
 
     # # Reset the contract
-    # zerocoin.reset({'from': hf.get_account()})
+    # zetacoin.reset({'from': hf.get_account()})
 
     # # Mint 3 coins
     # coins = []
     # for i in range(3):
-    #     coins.append(mint_coin(zerocoin))
+    #     coins.append(mint_coin(zetacoin))
 
     # # Spend the coins in the same order
     # for coin in coins:
     #     print(f"\n\nSpending coin {coin.serial_number}...")
-    #     spend_coin(zerocoin, coin)
+    #     spend_coin(zetacoin, coin)
