@@ -3,6 +3,8 @@ from HelperFunctions import *
 from ZK_Proof import *
 import math
 from typing import Tuple
+import matplotlib.pyplot as plt
+import numpy as np
 
 
 class Coin:
@@ -65,21 +67,63 @@ class Blockchain:
         return proof_valid, msg
         
 
-
-
-#The main program
 if __name__ == "__main__":
-    # Create a blockchain
-    blockchain = Blockchain()
+    length = [2**i for i in range(1, 7)]
+    print(length)
+    muls = [30, 49, 80, 135, 238, 238]
+    adds = [17, 28, 47, 82, 149, 149]
+    gas = [585811, 1315655, 3101827, 7400414]
+    print(muls)
+    print(adds)
+    # plot muls and adds on the same axis against length
+    #plt.plot(length, muls, 'r--', label='muls')
+    plt.step(length, muls, 'r', label='ECC scalar multiplications', where='post')
+    #plt.plot(length, adds, 'b--', label='adds')
+    plt.step(length, adds, 'b', label='ECC point additions', where='post')
+    plt.xlabel('length')
+    plt.xticks(length)
+    plt.ylabel('number of function calls')
+    plt.legend()
+    plt.savefig('ECC_efficiency analysis.svg')
 
-    # Mint some coins
-    coins = [blockchain.mint_coin() for i in range(1)]
-    blockchain.C.append(ECC.EccPoint(0, 0))
+    plt.figure()
+    plt.plot(length[:-2], gas, 'r--', label='gas')
+    plt.xlabel('length')
+    plt.xticks(length[:-2])
+    plt.ylabel('gas usage')
+    plt.legend()
+    plt.savefig('ECC_gas_usage.svg')
 
-    # Spend the coin
-    proof, S = blockchain.spend_coin(coins[0])
+    # Have a look at this
+    # https://cmdlinetips.com/2019/10/how-to-make-a-plot-with-two-different-y-axis-in-python-with-matplotlib/#:~:text=The%20way%20to%20make%20a,by%20updating%20the%20axis%20object.
 
-    # Verify the spend
-    proof_valid, msg = blockchain.verify_spend(S, proof)
-    print("The proof is valid:", proof_valid)
-    print("Message:", msg)
+# #The main program
+# if __name__ == "__main__":
+
+#     muls = []
+#     adds = []
+
+#     for length in [2, 4, 8, 16, 32, 64]:
+#         # Create a blockchain
+#         blockchain = Blockchain()
+
+#         # Mint some coins
+#         coins = [blockchain.mint_coin() for i in range(length)]
+#         blockchain.C.append(ECC.EccPoint(0, 0))
+
+#         # Spend the coin
+#         proof, S = blockchain.spend_coin(coins[0])
+
+#         ECC_mul.counter = 0
+#         ECC_add.counter = 0
+#         # Verify the spend
+#         proof_valid, msg = blockchain.verify_spend(S, proof)
+#         #print("The proof is valid:", proof_valid)
+#         #print("Message:", msg)
+#         #print("Mul counter:", ECC_mul.counter)
+#         #print("Add counter:", ECC_add.counter)
+#         muls.append(ECC_mul.counter)
+#         adds.append(ECC_add.counter)
+#     print("Muls:", muls)
+#     print("Adds:", adds)
+#     plt.plot(length, muls, label="Muls")

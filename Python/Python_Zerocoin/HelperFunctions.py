@@ -22,15 +22,23 @@ H = ECC.generate(curve='P-256').pointQ
 #     return pow(g, m, p) * pow(h, r, p) % p
 
 def ECC_commit(m:int, r: int) -> ECC.EccPoint:
-    return ECC_mul(m, G) + ECC_mul(r, H)
+    return ECC_add(ECC_mul(m, G), ECC_mul(r, H))
 
 # returns the scalar multiplication of a point P by a k
 # if k is negative, point inversion is performed
 def ECC_mul(k: int, point: ECC.EccPoint) -> ECC.EccPoint:
+    ECC_mul.counter += 1
     if k < 0:
         return -k * -point
     else:
         return k * point
+ECC_mul.counter = 0
+
+# Only to count to the number of additions performed
+def ECC_add(left: ECC.EccPoint, right: ECC.EccPoint) -> ECC.EccPoint:
+    ECC_add.counter += 1
+    return left + right
+ECC_add.counter = 0
 
 
 # Pad the list of commitments if its length is not a power of 2

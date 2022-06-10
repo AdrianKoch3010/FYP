@@ -105,8 +105,8 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     for j in range(n):
         cd = G.point_at_infinity()
         for i in range(N):
-            cd += ECC_mul(coeffs[i][j], commitments[i])
-        cd += ECC_commit(0, P[j])
+            cd = ECC_add(cd, ECC_mul(coeffs[i][j], commitments[i]))
+        cd = ECC_add(cd, ECC_commit(0, P[j]))
         Cd.append(cd)
 
     # Generate x as a random oracle
@@ -187,18 +187,18 @@ def verify_proof(S: int, commitments: list, proof: SigmaProof) -> Tuple[bool, st
                 product *= F[j]
             else:
                 product *= x - F[j]
-        outer_sum += ECC_mul(product, commitments[i])
+        outer_sum = ECC_add(outer_sum, ECC_mul(product, commitments[i]))
     left_sum = outer_sum
 
     # Calculate the sum of the other commitments
     right_sum = G.point_at_infinity()
     for k in range(n):
-        right_sum += ECC_mul(-pow(x, k), Cd[k])
+        right_sum = ECC_add(right_sum, ECC_mul(-pow(x, k), Cd[k]))
 
 
     print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
 
-    left = left_sum + right_sum
+    left = ECC_add(left_sum, right_sum)
     right = ECC_commit(0, zd)
     print('Check 3: {true}'.format(true=left == right))
     check3 = left == right

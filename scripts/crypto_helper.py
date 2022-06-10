@@ -1,5 +1,6 @@
 
 from Crypto.PublicKey import ECC
+#import py_ecc.bn128 as bn
 import math
 
 # NIST P-256 elliptic curve parameters in hexadecimal form

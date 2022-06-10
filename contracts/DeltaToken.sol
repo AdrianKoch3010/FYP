@@ -55,7 +55,7 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
     function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, value);
 
-        //require(hasRole(USER_ROLE, to), "Only users can transfer tokens");
+        //require(hasRole(USER_ROLE, to), "Only users can transfer Delta-Tokens");
     }
 
 }
