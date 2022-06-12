@@ -107,6 +107,9 @@ def main():
     # This allows the zetacoin contract to transfer tokens from the caller in the mint function
     deltaToken.approve(zetacoin.address, 1000000, {'from': hf.get_account()})
 
+    # Whitelist the zetacoin contract
+    deltaToken.whitelist(zetacoin.address, {'from': hf.get_account()})
+
     # Mint delta tokens
     deltaToken.mint(deltaToken.address, 10000000, {'from': hf.get_account()})
 
@@ -116,7 +119,7 @@ def main():
 
     # Mint 7 coins
     coins = []
-    for i in range(32):
+    for i in range(3):
         coins.append(mint_coin(zetacoin))
         # Get the balance of the zetacoin contract
         balance = zetacoin.getBalance()

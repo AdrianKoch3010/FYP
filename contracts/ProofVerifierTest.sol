@@ -1,4 +1,4 @@
-// contracts/SimpleProofVerifier.sol
+// contracts/ProofVerifierTest.sol
 // SPDX-License-Identifier: MIT
 
 pragma solidity ^0.8.0;
@@ -7,7 +7,7 @@ import "./P256.sol";
 // import "./BigNum.sol";
 
 
-contract SimpleProofVerifier {
+contract ProofVerifierTest {
 
     uint256 constant G = 3007057779649931580237598654612510797095951971612630025891176454468165002055;
     uint256 constant H = 20354936247998155748817459761265066334754915076915271771709029462851510023744;
@@ -42,6 +42,10 @@ contract SimpleProofVerifier {
 
     function mulBig(BigNum.instance memory a, BigNum.instance memory b) public pure returns (BigNum.instance memory) {
         return BigNum.mul(a, b);
+    }
+
+    function testEccAdd(ECC.Point memory a, ECC.Point memory b) public pure returns (ECC.Point memory) {
+        return ECC.add(a, b);
     }
 
     function testEccMul(BigNum.instance memory scalar, ECC.Point memory point) public pure returns (ECC.Point memory) {

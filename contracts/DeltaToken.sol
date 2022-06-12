@@ -44,8 +44,9 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
         _unpause();
     }
 
-    function addUserToWhitelist() public {
-        super._grantRole(USER_ROLE, _msgSender());
+    function whitelist(address user) public {
+        // calling grantRole() instead of _grantRole() makes sure that the _msgSender() has the USER_ROLE's admin role
+        super.grantRole(USER_ROLE, user);
     }
 
     function removeUserFromWhitelist() public {
@@ -55,7 +56,7 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
     function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Pausable) {
         super._beforeTokenTransfer(from, to, value);
 
-        //require(hasRole(USER_ROLE, to), "Only users can transfer Delta-Tokens");
+        require(hasRole(USER_ROLE, to), "Only users can transfer Delta-Tokens");
     }
 
 }

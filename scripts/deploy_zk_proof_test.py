@@ -1,5 +1,5 @@
 from Python.Python_Zerocoin.HelperFunctions import G
-from brownie import SimpleProofVerifier, accounts, network, config
+from brownie import ProofVerifierTest, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
@@ -11,7 +11,7 @@ def deploy():
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
     # deploy the proof verifier
-    proof_verifier = SimpleProofVerifier.deploy({'from': account}, publish_source=pub_source)
+    proof_verifier = ProofVerifierTest.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed ProofVerifier to address: {proof_verifier.address}")
     return proof_verifier
 
@@ -19,6 +19,17 @@ def deploy():
 def main():
     # Deploy the contract
     proof_verifier = deploy()
+
+
+    print("ECC_mul gas consumption")
+    num = ch.BigNum(551161384512312165512185463512,15313)
+    proof_verifier.testEccMul.transact(num.to_tuple(), [ch.H.x, ch.H.y], {'from': hf.get_account()})
+
+    print("ECC_add gas consumption")
+    proof_verifier.testEccAdd.transact([ch.G.x, ch.G.y], [ch.H.x, ch.H.y], {'from': hf.get_account()})
+
+    print("modExp gas consumption")
+    proof_verifier.testModExpBig.transact(ch.g, num.to_tuple(), {'from': hf.get_account()})
 
     # test modExp
     base = ch.g
