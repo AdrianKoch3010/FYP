@@ -49,8 +49,8 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
         super.grantRole(USER_ROLE, user);
     }
 
-    function removeUserFromWhitelist() public {
-        super._revokeRole(USER_ROLE, _msgSender());
+    function removeUserFromWhitelist(address user) public {
+        super.revokeRole(USER_ROLE, user);
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 value) internal virtual override(ERC20, ERC20Pausable) {
