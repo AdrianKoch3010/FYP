@@ -66,34 +66,97 @@ class Blockchain:
         
         return proof_valid, msg
         
+# 2,  3,4   5,6,7,8  9,
+def plot_mul_and_gas(muls, gas):
+    #plt.figure()
+    font = {'family': 'serif',
+            'weight': 'normal',
+            'size': 16}
+    plt.rc('font', **font)
+    plt.rcParams['figure.figsize'] = (10, 6)
+    plt.rcParams['figure.autolayout'] = True
+
+    length = [2**i + 1 for i in range(len(muls))]
+    length_ext = length + [(length[-1]-1)*2]
+    gas_ext = gas + [gas[-1]]
+    muls_ext = muls + [muls[-1]]
+    ax1 = plt.subplot()
+    ax1.set_xlabel('Anonymity set size')
+    ax1.set_ylabel('Gas consumption')
+    l1, = ax1.step(length_ext, gas_ext, 'tab:red', alpha=0.85, label="Gas", where="post")
+    ax1.plot(length, gas, color='tab:red', ls="--", alpha=0.5, label="Gas")
+    
+    # Plot ECC gas consmption point
+    val = 10565215
+    #ax1.plot([length[0]], [val / 10], color='tab:red', ls="dotted", alpha=1.0, label="ECCGas")
+    ax1.plot(2, val, marker='^', markersize=10, markeredgecolor='tab:red', markerfacecolor='tab:red', label="ECCGas")
+    ax1.text(2 + 0.3, val, "ECC Gas", fontsize=16, va='center', ha='left')
+    ax1.set_ylim([0, val*1.25])
+
+    ax2 = ax1.twinx()
+    # ax2.set_xlabel('length')
+    ax2.set_ylabel('No. of modular exponentiations')
+    l2, = ax2.step(length_ext, muls_ext, 'tab:blue', alpha=0.85, label="Mul", where="post")
+    ax2.plot(length, muls, color='tab:blue', ls='--', alpha=0.5, label="Mul")
+    ax2.set_ylim([0, muls[-1]*1.25])
+
+    #plt.xticks(length_ext)
+    plt.legend([l1, l2], ['Gas consumption', 'No. of modular exponentiations'])
+    plt.savefig('mul_and_gas.svg')
+
+def plot_gas_and_proof_size(gas, proof_sizes):
+    plt.figure()
+    font = {'family': 'serif',
+            'weight': 'normal',
+            'size': 16}
+    plt.rc('font', **font)
+    plt.rcParams['figure.figsize'] = (10, 6)
+    plt.rcParams['figure.autolayout'] = True
+
+    length = [2**i + 1 for i in range(len(gas))]
+    # length_ext = length + [(length[-1]-1)*2]
+    length_ext = length + [40]
+    gas_ext = gas + [gas[-1]]
+    proof_sizes_ext = proof_sizes + [proof_sizes[-1]]
+    ax1 = plt.subplot()
+    ax1.set_xlabel('Anonymity set size')
+    ax1.set_ylabel('Gas consumption')
+    # Plot the actual gas consumption
+    l1, = ax1.step(length_ext[:-2], gas_ext[:-2], 'tab:red', alpha=0.85, label="Gas", where="post")
+    ax1.plot(length[:-1], gas[:-1], color='tab:red', ls="--", alpha=0.5, label="Gas")
+
+    # Plot the extrapolated gas consumption
+    ax1.step(length_ext[-3:], gas_ext[-3:], 'tab:red', ls=':', alpha=0.35, label="Gas", where="post")
+    ax1.plot(length[-2:], gas[-2:], color='tab:red', ls="-.", alpha=0.25, label="Gas")
+
+    ax1.set_ylim([0, gas[-1]*1.1])
+
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('Proof size (bytes)')
+    l2, = ax2.step(length_ext, proof_sizes_ext, 'tab:green', alpha=0.85, label="ProofSize", where="post")
+    ax2.plot(length, proof_sizes, color='tab:green', ls='--', alpha=0.5, label="ProofSize")
+    ax2.set_ylim([0, proof_sizes[-1]*1.1])
+
+    #plt.xticks(length_ext)
+    plt.legend([l1, l2], ['Gas consumption', 'Proof size'])
+    plt.savefig('gas_and_proof_size.svg')
+
 
 if __name__ == "__main__":
-    length = [2**i for i in range(1, 7)]
-    print(length)
-    muls = [30, 49, 80, 135, 238, 238]
+    _muls = [30, 49, 80, 135, 238, 238]
+    muls = [30, 49, 80, 135]
     adds = [17, 28, 47, 82, 149, 149]
     gas = [585811, 1315655, 3101827, 7400414]
-    print(muls)
-    print(adds)
-    # plot muls and adds on the same axis against length
-    #plt.plot(length, muls, 'r--', label='muls')
-    plt.step(length, muls, 'r', label='ECC scalar multiplications', where='post')
-    #plt.plot(length, adds, 'b--', label='adds')
-    plt.step(length, adds, 'b', label='ECC point additions', where='post')
-    plt.xlabel('length')
-    plt.xticks(length)
-    plt.ylabel('number of function calls')
-    plt.legend()
-    plt.savefig('ECC_efficiency analysis.svg')
+    gas_extrapolated = [585811, 1315655, 3101827, 7400414, 17135561, 32711796]
+    proof_sizes = [802, 1250, 1714, 2162, 2594, 3042]
 
-    plt.figure()
-    plt.plot(length[:-2], gas, 'r--', label='gas')
-    plt.xlabel('length')
-    plt.xticks(length[:-2])
-    plt.ylabel('gas usage')
-    plt.legend()
-    plt.savefig('ECC_gas_usage.svg')
+    plot_mul_and_gas(muls, gas)
 
+    plot_gas_and_proof_size(gas_extrapolated, proof_sizes)
+    
+
+
+    
     # Have a look at this
     # https://cmdlinetips.com/2019/10/how-to-make-a-plot-with-two-different-y-axis-in-python-with-matplotlib/#:~:text=The%20way%20to%20make%20a,by%20updating%20the%20axis%20object.
 

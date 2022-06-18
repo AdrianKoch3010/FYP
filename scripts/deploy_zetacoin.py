@@ -91,10 +91,11 @@ def spend_coin(zetacoin_contract, coin: Coin):
     proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     print(f"Generated proof for spending coin {coin.serial_number}")
 
-    tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
-    tx.wait(1)
+    #tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
+    #tx.wait(1)
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
-    print(f"Calldata length: {len(zetacoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4} bytes")
+    calldata_length = len(zetacoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4
+    print(f"Calldata length: {calldata_length} bytes")
 
 def main():
     # Deploy the contracts
@@ -105,21 +106,24 @@ def main():
 
     # Add allowance for the zetacoin contract to spend the delta token
     # This allows the zetacoin contract to transfer tokens from the caller in the mint function
-    deltaToken.approve(zetacoin.address, 1000000, {'from': hf.get_account()})
+    deltaToken.approve(zetacoin.address, 100000000, {'from': hf.get_account()})
 
     # Whitelist the zetacoin contract
     deltaToken.whitelist(zetacoin.address, {'from': hf.get_account()})
 
     # Mint delta tokens
-    deltaToken.mint(deltaToken.address, 10000000, {'from': hf.get_account()})
+    deltaToken.mint(deltaToken.address, 1000000000, {'from': hf.get_account()})
 
     # Get the balance of the zetacoin contract
     balance = zetacoin.getBalance()
     print(f"Balance of Zetacoin contract: {balance}")
 
-    # Mint 7 coins
+    # reset the contract
+    zetacoin.reset({'from': hf.get_account()})
+
+    # Mint coins
     coins = []
-    for i in range(3):
+    for i in range(5):
         coins.append(mint_coin(zetacoin))
         # Get the balance of the zetacoin contract
         balance = zetacoin.getBalance()
@@ -135,6 +139,7 @@ def main():
     # Get the balance of the zetacoin contract
     balance = zetacoin.getBalance()
     print(f"Balance of Zetacoin contract: {balance}")
+
 
     # # Spend the coins in reverse order
     # for coin in reversed(coins):
