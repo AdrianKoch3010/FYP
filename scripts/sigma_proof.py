@@ -100,11 +100,11 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     Cd = []
 
     for j in range(n):
-        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 34567121313212339
-        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 354315123132132999
-        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 35448548945132299
-        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 34568484231231329
-        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373745132123132
+        r = random.randint(2, ch.ffc_p-2) if generate_new else (j + 87654) * 34567121313212339
+        a = random.randint(2, ch.ffc_p-2) if generate_new else (j + 4344) * 354315123132132999
+        s = random.randint(2, ch.ffc_p-2) if generate_new else (j + 234) * 35448548945132299
+        t = random.randint(2, ch.ffc_p-2) if generate_new else (j + 4345) * 34568484231231329
+        _p = random.randint(2, ch.ffc_p-2) if generate_new else (j + 534) * 97373745132123132
         R.append(r)
         A.append(a)
         S.append(s)
@@ -125,8 +125,8 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     for j in range(n):
         cd = 1
         for i in range(N):
-            cd = cd * pow(commitments[i], coeffs[i][j], ch.p) % ch.p
-        cd = cd * ch.commit(0, P[j]) % ch.p
+            cd = cd * pow(commitments[i], coeffs[i][j], ch.ffc_p) % ch.ffc_p
+        cd = cd * ch.commit(0, P[j]) % ch.ffc_p
         Cd.append(cd)
 
     # Generate x as a random oracle
@@ -182,14 +182,14 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
     print('Checking commitments to l')
     check1 = True
     for j in range(n):
-        left = pow(Cl[j], x, ch.p) * Ca[j] % ch.p
+        left = pow(Cl[j], x, ch.ffc_p) * Ca[j] % ch.ffc_p
         right = ch.commit(F[j], Za[j])
         print('Check 1.{j}: {true}'.format(j=j, true=left == right))
         check1 = check1 and (left == right)
 
     check2 = True
     for j in range(n):
-        left = pow(Cl[j], x-F[j]) * Cb[j] % ch.p
+        left = pow(Cl[j], x-F[j]) * Cb[j] % ch.ffc_p
         right = ch.ECC_commit(0, Zb[j])
         print('Check 2.{j}: {true}'.format(j=j, true=left == right))
         check2 = check2 and (left == right)
@@ -205,17 +205,17 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
                 product *= F[j]
             else:
                 product *= x - F[j]
-        left_product *= pow(commitments[i], product, ch.p) % ch.p
+        left_product *= pow(commitments[i], product, ch.ffc_p) % ch.ffc_p
 
     # Calculate the sum of the other commitments
     right_product = 1
     for k in range(n):
-        right_product *= pow(Cd[k], -pow(x, k)) % ch.p
+        right_product *= pow(Cd[k], -pow(x, k)) % ch.ffc_p
 
 
     #print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
 
-    left = left_product * right_product % ch.p
+    left = left_product * right_product % ch.ffc_p
     right = ch.commit(0, zd)
     print('Check 3: {true}'.format(true=left == right))
     check3 = left == right

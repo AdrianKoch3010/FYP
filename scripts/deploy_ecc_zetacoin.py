@@ -15,9 +15,9 @@ class Coin:
 
     # l is the index of the coin in the list of commitments
     def mint(self):
-        blinding_factor = random.randint(2, ch.p-2)
+        blinding_factor = random.randint(2, ch.ecc_p-2)
         # // 4 --> make sure S does not flip to negative when converting to signed int256
-        serial_number = random.randint(2, ch.p // 4)
+        serial_number = random.randint(2, ch.ecc_p // 4)
         #serial_number = 0
         commitment = ch.ECC_commit(serial_number, blinding_factor)
         self.blinding_factor = blinding_factor
@@ -32,25 +32,6 @@ def deploy():
     zetacoin = ECCZetacoin.deploy({'from': account}, publish_source=pub_source)
     print(f"Deployed Zetacoin to address: {zetacoin.address}")
     return zetacoin
-
-def create_commitments(n: int, l: int, generate_new = True):
-    # Create a list of commitments, one of which is a commitment to 0
-    #generate_new = True
-    commitments = []
-    N = 2**n
-    r_0_commitment = 0
-    assert l < N, "l must be less than N"
-    assert N == 2**math.ceil(math.log(N, 2)), "N must be a power of 2"
-
-    for i in range(N):
-        if i == l:
-            m = 0
-        else:
-            m = random.randint(2, ch.p-2) if generate_new else (i + 234) * 567211321231
-        r = random.randint(2, ch.p-2) if generate_new else (i + 9876) * 987654321521321551235
-        r_0_commitment = r if i == l else r_0_commitment
-        commitments.append(ch.ECC_commit(m, r))
-    return commitments, r_0_commitment
 
 
 def mint_coin(zetacoin_contract):

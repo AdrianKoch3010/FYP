@@ -4,6 +4,7 @@ from scripts import helpful_functions as hf
 from scripts import crypto_helper as ch
 from scripts import sigma_proof as sp
 from Crypto.Random import random
+from time import time
 import math
 
 class Coin:
@@ -14,9 +15,9 @@ class Coin:
 
     # l is the index of the coin in the list of commitments
     def mint(self):
-        blinding_factor = random.randint(2, ch.p-2)
+        blinding_factor = random.randint(2, ch.ffc_p-2)
         # // 4 --> make sure S does not flip to negative when converting to signed int256
-        serial_number = random.randint(2, ch.p // 4)
+        serial_number = random.randint(2, ch.ffc_p // 4)
         #serial_number = 0
         commitment = ch.commit(serial_number, blinding_factor)
         self.blinding_factor = blinding_factor
@@ -42,26 +43,6 @@ def deployZetacoin(ERC20_address):
     return zetacoin
 
 
-def create_commitments(n: int, l: int, generate_new = True):
-    # Create a list of commitments, one of which is a commitment to 0
-    #generate_new = True
-    commitments = []
-    N = 2**n
-    r_0_commitment = 0
-    assert l < N, "l must be less than N"
-    assert N == 2**math.ceil(math.log(N, 2)), "N must be a power of 2"
-
-    for i in range(N):
-        if i == l:
-            m = 0
-        else:
-            m = random.randint(2, ch.p-2) if generate_new else (i + 234) * 567211321231
-        r = random.randint(2, ch.p-2) if generate_new else (i + 9876) * 987654321521321551235
-        r_0_commitment = r if i == l else r_0_commitment
-        commitments.append(ch.commit(m, r))
-    return commitments, r_0_commitment
-
-
 def mint_coin(zetacoin_contract):
     coin = Coin()
     # When calling the function, the state of the blockchain is not altered, just returns the index
@@ -82,17 +63,24 @@ def spend_coin(zetacoin_contract, coin: Coin):
     # for c in coins:
     #     print(f'Coin: {c}')
 
+    # Start timer
+    start = time()
+
     # Homomorphically subtract the serial number from the coin commitments
     commitments = []
     for comm in coins:
-        commitments.append(comm * pow(ch.commit(coin.serial_number, 0), -1, ch.p) % ch.p)
+        commitments.append(comm * pow(ch.commit(coin.serial_number, 0), -1, ch.ffc_p) % ch.ffc_p)
 
     # proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     proof = sp.generate_proof(commitments, coin.serial_number, coin.position_in_coins, coin.blinding_factor)
     print(f"Generated proof for spending coin {coin.serial_number}")
 
-    #tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
-    #tx.wait(1)
+    # End timer
+    end = time()
+    print(f"Time to generate proof: {end - start}")
+
+    tx = zetacoin_contract.spend(coin.serial_number, proof.to_tuple(), {'from': hf.get_account()})
+    tx.wait(1)
     print(f"Spent coin {coin.serial_number} at index {coin.position_in_coins}")
     calldata_length = len(zetacoin_contract.spend.encode_input(coin.serial_number, proof.to_tuple())) // 4
     print(f"Calldata length: {calldata_length} bytes")
@@ -123,7 +111,7 @@ def main():
 
     # Mint coins
     coins = []
-    for i in range(5):
+    for i in range(2):
         coins.append(mint_coin(zetacoin))
         # Get the balance of the zetacoin contract
         balance = zetacoin.getBalance()
@@ -134,11 +122,19 @@ def main():
     # Spend a random coin
     coin = coins[random.randint(0, len(coins)-1)]
     print(f"\n\nSpending coin {coin.serial_number}...")
+    #coin.blinding_factor = 4567887654
     spend_coin(zetacoin, coin)
 
     # Get the balance of the zetacoin contract
     balance = zetacoin.getBalance()
     print(f"Balance of Zetacoin contract: {balance}")
+
+
+    # g, h, r1, r2 = ch.generate_g_and_h(verify=True, prime=0x83B4F95D30D4F5C4D271F66F220B41547AD121EEFBF8D2AB745E5CEFD2EF3123)
+    # print(f"g: {hex(g)}")
+    # print(f"h: {hex(h)}")
+    # print(f"r1: {hex(r1)}")
+    # print(f"r2: {hex(r2)}")
 
 
     # # Spend the coins in reverse order

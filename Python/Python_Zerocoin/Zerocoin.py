@@ -71,9 +71,9 @@ def plot_mul_and_gas(muls, gas):
     #plt.figure()
     font = {'family': 'serif',
             'weight': 'normal',
-            'size': 16}
+            'size': 20}
     plt.rc('font', **font)
-    plt.rcParams['figure.figsize'] = (10, 6)
+    plt.rcParams['figure.figsize'] = (13, 8)
     plt.rcParams['figure.autolayout'] = True
 
     length = [2**i + 1 for i in range(len(muls))]
@@ -90,7 +90,7 @@ def plot_mul_and_gas(muls, gas):
     val = 10565215
     #ax1.plot([length[0]], [val / 10], color='tab:red', ls="dotted", alpha=1.0, label="ECCGas")
     ax1.plot(2, val, marker='^', markersize=10, markeredgecolor='tab:red', markerfacecolor='tab:red', label="ECCGas")
-    ax1.text(2 + 0.3, val, "ECC Gas", fontsize=16, va='center', ha='left')
+    ax1.text(2 + 0.3, val, "ECC Gas", fontsize=20, va='center', ha='left')
     ax1.set_ylim([0, val*1.25])
 
     ax2 = ax1.twinx()
@@ -101,16 +101,19 @@ def plot_mul_and_gas(muls, gas):
     ax2.set_ylim([0, muls[-1]*1.25])
 
     #plt.xticks(length_ext)
-    plt.legend([l1, l2], ['Gas consumption', 'No. of modular exponentiations'])
-    plt.savefig('mul_and_gas.svg')
+    plt.legend([l2, l1], ['No. of modular exponentiations', 'Gas consumption'])
+    plt.savefig('mul_and_gas.png')
 
 def plot_gas_and_proof_size(gas, proof_sizes):
+    # Subtract 32 from the proof size
+    proof_sizes = [proof_size - 32 for proof_size in proof_sizes]
+
     plt.figure()
     font = {'family': 'serif',
             'weight': 'normal',
-            'size': 16}
+            'size': 20}
     plt.rc('font', **font)
-    plt.rcParams['figure.figsize'] = (10, 6)
+    plt.rcParams['figure.figsize'] = (13, 8)
     plt.rcParams['figure.autolayout'] = True
 
     length = [2**i + 1 for i in range(len(gas))]
@@ -129,7 +132,7 @@ def plot_gas_and_proof_size(gas, proof_sizes):
     ax1.step(length_ext[-3:], gas_ext[-3:], 'tab:red', ls=':', alpha=0.35, label="Gas", where="post")
     ax1.plot(length[-2:], gas[-2:], color='tab:red', ls="-.", alpha=0.25, label="Gas")
 
-    ax1.set_ylim([0, gas[-1]*1.1])
+    ax1.set_ylim([0, gas[-1]*1.2])
 
     ax2 = ax1.twinx()
     ax2.set_ylabel('Proof size (bytes)')
@@ -138,8 +141,8 @@ def plot_gas_and_proof_size(gas, proof_sizes):
     ax2.set_ylim([0, proof_sizes[-1]*1.1])
 
     #plt.xticks(length_ext)
-    plt.legend([l1, l2], ['Gas consumption', 'Proof size'])
-    plt.savefig('gas_and_proof_size.svg')
+    plt.legend([l2, l1], ['Proof size', 'Gas consumption'])
+    plt.savefig('gas_and_proof_size.png')
 
 
 if __name__ == "__main__":
@@ -153,7 +156,7 @@ if __name__ == "__main__":
     plot_mul_and_gas(muls, gas)
 
     plot_gas_and_proof_size(gas_extrapolated, proof_sizes)
-    
+
 
 
     

@@ -115,11 +115,11 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     Cd = []
 
     for j in range(n):
-        r = random.randint(2, ch.p-2) if generate_new else (j + 87654) * 34567121313212339
-        a = random.randint(2, ch.p-2) if generate_new else (j + 4344) * 354315123132132999
-        s = random.randint(2, ch.p-2) if generate_new else (j + 234) * 35448548945132299
-        t = random.randint(2, ch.p-2) if generate_new else (j + 4345) * 34568484231231329
-        _p = random.randint(2, ch.p-2) if generate_new else (j + 534) * 97373745132123132
+        r = random.randint(2, ch.ecc_p-2) if generate_new else (j + 87654) * 34567121313212339
+        a = random.randint(2, ch.ecc_p-2) if generate_new else (j + 4344) * 354315123132132999
+        s = random.randint(2, ch.ecc_p-2) if generate_new else (j + 234) * 35448548945132299
+        t = random.randint(2, ch.ecc_p-2) if generate_new else (j + 4345) * 34568484231231329
+        _p = random.randint(2, ch.ecc_p-2) if generate_new else (j + 534) * 97373745132123132
         R.append(r)
         A.append(a)
         S.append(s)

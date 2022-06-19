@@ -37,7 +37,7 @@ def main():
 
     result = proof_verifier.testModExpBig(base, exponent.to_tuple())
     print(f"ModExp: {result}")
-    print(f'Correct: {result == pow(base, exponent.to_int(), ch.p)}')
+    print(f'Correct: {result == pow(base, exponent.to_int(), ch.ffc_p)}')
 
     # Attempt to verify a proof
     # proof structure:
@@ -47,10 +47,10 @@ def main():
     # uint256 z_a;
     # uint256 z_b;
     
-    _max = ch.p - 2
+    _max = ch.ffc_p - 2
     generate_new = False
 
-    p = ch.p
+    p = ch.ffc_p
     m = 1
     r = random.randint(2, _max) if generate_new else 1556
 

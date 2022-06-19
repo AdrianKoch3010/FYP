@@ -11,7 +11,8 @@ library BigNum {
     }
 
     uint256 constant LOWER_MASK = 2**128 - 1;
-    uint256 constant PRIME = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff;
+    //uint256 constant PRIME = 0xffffffff00000001000000000000000000000000ffffffffffffffffffffffff;
+    uint256 constant PRIME = 0x83b4f95d30d4f5c4d271f66f220b41547ad121eefbf8d2ab745e5cefd2ef3123;
 
     function _new(int128 num) internal pure returns (instance memory) {
         instance memory ret;
@@ -266,56 +267,6 @@ library BigNum {
             result := mload(p)
         }
     }
-
-
-    // // Calculates a uint256 to the power of a big number mod p
-    // function modExp(uint256 base, BigNum.instance memory exp) internal view returns (uint256 result) {
-
-    //     // 0 or 1 to the power of anything is 0 or 1 respectively
-    //     if (base == 0 || base == 1)
-    //         return base;
-
-    //     // When calculating a negative power, we have to invert the base
-    //     // Use Fermats little theorem to calculate the multiplicative inverse
-    //     if (exp.neg == true)
-    //         base = modExp(base, PRIME - 2);
-
-    //     uint256 length = 5 + exp.val.length / 2;
-    //     if (exp.val.length % 2 == 1) {
-    //         length++;
-    //     }
-
-    //     uint256[] memory inputToPrecompile = new uint256[](length);
-    //     inputToPrecompile[0] = 0x20; // length of base
-    //     inputToPrecompile[1] = length; // length of exponent
-    //     inputToPrecompile[2] = 0x20; // length of modulus
-    //     inputToPrecompile[3] = base; // base
-    //     uint256 i = 0;
-    //     for (i = 0; i < exp.val.length / 2; i++) {
-    //         inputToPrecompile[4 + i] = uint256(exp.val[2*i]) + (uint256(exp.val[2*i+1]) << 128);
-    //     }
-    //     // If the length of the exponent is uneven, assign the last value of the array
-    //     if (exp.val.length % 2 == 1) {
-    //         //i++;
-    //         //i--;
-    //         inputToPrecompile[4 + i] = uint256(exp.val[2*i]);
-    //     }
-
-    //     inputToPrecompile[5] = PRIME; // modulus
-
-    //     //require(i == length, "Length of inputToPrecompile is not correct");
-
-    //     assembly {
-    //         // define pointer
-    //         let p := mload(0x40)
-
-    //         if iszero(staticcall(sub(gas(), 2000), 0x05, inputToPrecompile, length, p, 0x20)) {
-    //             revert(0, 0)
-    //         }
-    //         // data
-    //         result := mload(p)
-    //     }
-    // }
 
 
     // Calculates a uint256 to the power of a big number mod p
