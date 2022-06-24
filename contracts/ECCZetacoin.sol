@@ -37,7 +37,6 @@ contract ECCZetacoin is Context, AccessControlEnumerable{
         logCounter = 1;
 
         // The list of coins must have a minimum size of 2
-        // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
         coins.push(ECC.commit(42, 42));
         coins.push(ECC.commit(42, 42));
     }
@@ -67,7 +66,6 @@ contract ECCZetacoin is Context, AccessControlEnumerable{
 
             // Ensure the list has length of a power of 2 (fill up with zeros)
             while (coins.length & (coins.length - 1) != 0)
-                // We can't use a commitment to 0, 0 here, as the ECC library doesn't like multiplying a 0 point by a scalar
                 coins.push(ECC.commit(42, 42));
 
             logCounter++;
@@ -92,7 +90,6 @@ contract ECCZetacoin is Context, AccessControlEnumerable{
         
         // Check the proof
         success = ECCSigmaProofVerifier.verify(serialNumber, commitments, logCounter, proof);
-        //success = SigmaProofVerifier.verify(serialNumber, coins, logCounter, proof);
         require(success, "The proof is invalid");
 
         // Mark the coin as spent
@@ -107,8 +104,9 @@ contract ECCZetacoin is Context, AccessControlEnumerable{
     }
 
     // Resets the state of the contract
-    // Only for testing
-    // TODO: Should the owner have this power? Propably in an actual scenario, no
+    // Only admmins can reset. This will essentially delete everyones fund
+    // Admins can block users from using the underlying Delta-Token anyway
+    // -> Remove when deployed outside a CBDC context
     function reset() public {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admins can reset the contract");
         lastIdx = 0;

@@ -28,7 +28,7 @@ def deployDeltaToken():
     account = hf.get_account()
 
     pub_source = publish_source=config['networks'][network.show_active()]['verify']
-    # deploy the delta token with an initial supply of 1000 tokens
+    # deploy the delta token with an initial supply of 10000000 tokens
     deltaToken = DeltaToken.deploy(10000000, {'from': account}, publish_source=pub_source)
     print(f"Deployed DeltaToken to address: {deltaToken.address}")
     return deltaToken

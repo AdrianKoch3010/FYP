@@ -49,7 +49,6 @@ contract Zetacoin is Context, AccessControlEnumerable{
     }
 
     // The mint function adds a commitment to the list of coins and returns its index
-    // TODO: Minting should require burning some ERC20 token
     // It then ensures the list has length of a power of 2
     function mint(uint256 commitment) public checkAllowance(AMOUNT) returns(uint256 index) {
         // Deposit the amount in the contract
@@ -110,8 +109,9 @@ contract Zetacoin is Context, AccessControlEnumerable{
     }
 
     // Resets the state of the contract
-    // Only for testing
-    // TODO: Should the owner have this power? Propably in an actual scenario, no
+    // Only admmins can reset. This will essentially delete everyones fund
+    // Admins can block users from using the underlying Delta-Token anyway
+    // -> Remove when deployed outside a CBDC context
     function reset() public {
         require(hasRole(DEFAULT_ADMIN_ROLE, _msgSender()), "Only admins can reset the contract");
         lastIdx = 0;
