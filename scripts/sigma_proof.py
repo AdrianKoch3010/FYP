@@ -213,8 +213,6 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
         right_product *= pow(Cd[k], -pow(x, k)) % ch.ffc_p
 
 
-    #print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
-
     left = left_product * right_product % ch.ffc_p
     right = ch.commit(0, zd)
     print('Check 3: {true}'.format(true=left == right))

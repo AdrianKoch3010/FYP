@@ -129,6 +129,14 @@ def generate_proof(commitments: list, serial_number: int, l: int, r_0_commitment
     #r = the r used in the commitment to c_l
     zd = r_0_commitment * pow(x, n) - sum([P[k] * pow(x, k) for k in range(n)])
 
+    # # Reduce the bit length of the F, Za, Zb, and zd values by applying fermats little theorem --> Only workd for FFC
+    # for j in range(n):
+    #     F[j] = F[j] if F[j] < curve_order else (F[j] + 1) % curve_order
+    #     Za[j] = Za[j] if Za[j] < curve_order else (Za[j] + 1) % curve_order
+    #     Zb[j] = Zb[j] if Zb[j] < curve_order else (Zb[j] + 1) % curve_order
+    # zd = zd if zd < curve_order else (zd + 1) % curve_order
+
+
     # Create the sigma proof
     sigma_response = SigmaProof.Response(F, Za, Zb, zd)
     sigma_proof = SigmaProof(SigmaProof.Commitment(Cl, Ca, Cb, Cd), x, sigma_response)

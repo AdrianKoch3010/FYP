@@ -1,4 +1,4 @@
-from Python.Python_Zerocoin.HelperFunctions import G
+from Experiments.Python_Zerocoin.HelperFunctions import G
 from brownie import ProofVerifierTest, ECC, EllipticCurve, BigNum, accounts, network, config
 from web3 import Web3
 from scripts import helpful_functions as hf

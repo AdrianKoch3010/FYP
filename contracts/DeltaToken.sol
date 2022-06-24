@@ -12,6 +12,7 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
     bytes32 public constant USER_ROLE = keccak256("userRole");
     bytes32 public constant MINTER_ROLE = keccak256("minterRole");
     bytes32 public constant PAUSER_ROLE = keccak256("pauserRole");
+    bytes32 public constant KYC_AUTHORITY = keccak256("KYCAuthority");
 
     uint256 public constant INITIAL_SUPPLY = 1000000000;
 
@@ -21,6 +22,9 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
 
         _setupRole(MINTER_ROLE, _msgSender());
         _setupRole(PAUSER_ROLE, _msgSender());
+        _setupRole(KYC_AUTHORITY, _msgSender());
+        _setRoleAdmin(USER_ROLE, KYC_AUTHORITY);
+
 
         // Both the creator of the contract and the contract itself are users
         _setupRole(USER_ROLE, _msgSender());
@@ -50,6 +54,7 @@ contract DeltaToken is Context, AccessControl, ERC20Burnable, ERC20Pausable {
     }
 
     function removeUserFromWhitelist(address user) public {
+        // calling revokeRole() instead of _revokeRole() makes sure that the _msgSender() has the USER_ROLE's admin role
         super.revokeRole(USER_ROLE, user);
     }
 

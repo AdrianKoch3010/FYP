@@ -18,31 +18,3 @@ def get_account(index=None, id=None):
     ):
         return accounts[0]
     return accounts.add(config["wallets"]["from_key"])
-
-
-# def get_contract():
-#     """This function will grab the contract addresses from the brownie config
-#     if defined, otherwise, it will deploy a mock version of that contract, and
-#     return that mock contract.
-#         Args:
-#             contract_name (string)
-#         Returns:
-#             brownie.network.contract.ProjectContract: The most recently deployed
-#             version of this contract.
-#     """
-#     contract_type = contract_to_mock[contract_name]
-#     if network.show_active() in LOCAL_BLOCKCHAIN_ENVIRONMENTS:
-#         if len(contract_type) <= 0:
-#             # MockV3Aggregator.length
-#             deploy_mocks()
-#         contract = contract_type[-1]
-#         # MockV3Aggregator[-1]
-#     else:
-#         contract_address = config["networks"][network.show_active()][contract_name]
-#         # address
-#         # ABI
-#         contract = Contract.from_abi(
-#             contract_type._name, contract_address, contract_type.abi
-#         )
-#         # MockV3Aggregator.abi
-#     return 

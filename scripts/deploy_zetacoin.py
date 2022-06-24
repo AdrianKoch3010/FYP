@@ -59,9 +59,6 @@ def spend_coin(zetacoin_contract, coin: Coin):
     coins = []
     for comm in result:
         coins.append(comm)
-    
-    # for c in coins:
-    #     print(f'Coin: {c}')
 
     # Start timer
     start = time()
@@ -122,7 +119,6 @@ def main():
     # Spend a random coin
     coin = coins[random.randint(0, len(coins)-1)]
     print(f"\n\nSpending coin {coin.serial_number}...")
-    #coin.blinding_factor = 4567887654
     spend_coin(zetacoin, coin)
 
     # Get the balance of the zetacoin contract

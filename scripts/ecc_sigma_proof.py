@@ -224,15 +224,11 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
                 product *= x - F[j]
         left_sum += ch.ECC_mul(product, commitments[i])
 
-    #print(f'left_sum: {left_sum.x}, {left_sum.y}')
-
     # Calculate the sum of the other commitments
     right_sum = ch.G.point_at_infinity()
     for k in range(n):
         right_sum += ch.ECC_mul(-pow(x, k), Cd[k])
 
-
-    #print('Worst case number of bits required: ', math.ceil(math.log(pow(x, n-1), 2)))
 
     left = left_sum + right_sum
     right = ch.ECC_commit(0, zd)
@@ -251,29 +247,3 @@ def verify_proof(serial_number: int, commitments: list, proof: SigmaProof) -> Tu
         return True, "Proof is valid"
     else:
         return False, error_string
-
-# def test_hash(points, nums):
-#     h = SHA256.new()
-    
-#     # result is a byte string of 32 0
-#     result = bytes(32)
-
-#     # hash all the ECC points
-#     for point in points:
-#         encoded_bytes = result
-#         encoded_bytes += convert.to_bytes(int(point.x))
-#         encoded_bytes += convert.to_bytes(int(point.y))
-#         result = SHA256.new(encoded_bytes).digest()
-
-#     # hash all the integers
-#     for n in nums:
-#         big_num = ch.BigNum(n)
-#         for cell in big_num.val:
-#             encoded_bytes = result
-#             encoded_bytes += convert.to_bytes(int(cell), type_str='bytes16')
-#             result = SHA256.new(encoded_bytes).digest()
-#         encoded_bytes = result
-#         encoded_bytes += convert.to_bytes(int(big_num.neg), type_str='bytes1')
-#         result = SHA256.new(encoded_bytes).digest()
-    
-#     return int.from_bytes(result, byteorder='big')

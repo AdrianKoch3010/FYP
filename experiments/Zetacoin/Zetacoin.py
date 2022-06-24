@@ -145,17 +145,17 @@ def plot_gas_and_proof_size(gas, proof_sizes):
     plt.savefig('gas_and_proof_size.png')
 
 
-if __name__ == "__main__":
-    _muls = [30, 49, 80, 135, 238, 238]
-    muls = [30, 49, 80, 135]
-    adds = [17, 28, 47, 82, 149, 149]
-    gas = [585811, 1315655, 3101827, 7400414]
-    gas_extrapolated = [585811, 1315655, 3101827, 7400414, 17135561, 32711796]
-    proof_sizes = [802, 1250, 1714, 2162, 2594, 3042]
+# if __name__ == "__main__":
+#     _muls = [30, 49, 80, 135, 238, 238]
+#     muls = [30, 49, 80, 135]
+#     adds = [17, 28, 47, 82, 149, 149]
+#     gas = [585811, 1315655, 3101827, 7400414]
+#     gas_extrapolated = [585811, 1315655, 3101827, 7400414, 17135561, 32711796]
+#     proof_sizes = [802, 1250, 1714, 2162, 2594, 3042]
 
-    plot_mul_and_gas(muls, gas)
+#     plot_mul_and_gas(muls, gas)
 
-    plot_gas_and_proof_size(gas_extrapolated, proof_sizes)
+#     plot_gas_and_proof_size(gas_extrapolated, proof_sizes)
 
 
 
@@ -163,33 +163,33 @@ if __name__ == "__main__":
     # Have a look at this
     # https://cmdlinetips.com/2019/10/how-to-make-a-plot-with-two-different-y-axis-in-python-with-matplotlib/#:~:text=The%20way%20to%20make%20a,by%20updating%20the%20axis%20object.
 
-# #The main program
-# if __name__ == "__main__":
+#The main program
+if __name__ == "__main__":
 
-#     muls = []
-#     adds = []
+    muls = []
+    adds = []
 
-#     for length in [2, 4, 8, 16, 32, 64]:
-#         # Create a blockchain
-#         blockchain = Blockchain()
+    for length in [2 ]:#, 4, 8, 16, 32, 64]:
+        # Create a blockchain
+        blockchain = Blockchain()
 
-#         # Mint some coins
-#         coins = [blockchain.mint_coin() for i in range(length)]
-#         blockchain.C.append(ECC.EccPoint(0, 0))
+        # Mint some coins
+        coins = [blockchain.mint_coin() for i in range(length)]
+        blockchain.C.append(ECC.EccPoint(0, 0))
 
-#         # Spend the coin
-#         proof, S = blockchain.spend_coin(coins[0])
+        # Spend the coin
+        proof, S = blockchain.spend_coin(coins[0])
 
-#         ECC_mul.counter = 0
-#         ECC_add.counter = 0
-#         # Verify the spend
-#         proof_valid, msg = blockchain.verify_spend(S, proof)
-#         #print("The proof is valid:", proof_valid)
-#         #print("Message:", msg)
-#         #print("Mul counter:", ECC_mul.counter)
-#         #print("Add counter:", ECC_add.counter)
-#         muls.append(ECC_mul.counter)
-#         adds.append(ECC_add.counter)
-#     print("Muls:", muls)
-#     print("Adds:", adds)
-#     plt.plot(length, muls, label="Muls")
+        ECC_mul.counter = 0
+        ECC_add.counter = 0
+        # Verify the spend
+        proof_valid, msg = blockchain.verify_spend(S, proof)
+        #print("The proof is valid:", proof_valid)
+        #print("Message:", msg)
+        #print("Mul counter:", ECC_mul.counter)
+        #print("Add counter:", ECC_add.counter)
+        muls.append(ECC_mul.counter)
+        adds.append(ECC_add.counter)
+    print("Muls:", muls)
+    print("Adds:", adds)
+    plt.plot(length, muls, label="Muls")
